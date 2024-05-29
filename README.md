@@ -191,9 +191,9 @@ The following properties are checked by `static_assert`'s:
       BF::FunctionRef<void ()> f = s;         // OK
       s();                                    // "as if you would call it" - also OK
 
-      const S cs;
-      BF::FunctionRef<void ()> g = cs;        // static_assert: cannot initialize 'g' with 'cs'
-      cs();                                   // "as if you would call it" - also ill-formed
+      const S z;
+      BF::FunctionRef<void ()> g = z;         // static_assert: cannot initialize 'g' with 'z'
+      z();                                    // "as if you would call it" - also ill-formed
   }
   ```
 
@@ -207,7 +207,7 @@ The following properties are checked by `static_assert`'s:
   {
       S s;
       BF::FunctionRef<void () const> f = s;   // static_assert: cannot initialize 'f' with 's'
-      const_cast<const S&>(s)();              // "as if you would add 'const'" - also ill-formed
+      const_cast<const S&>(s)();              // "as if you would add const" - also ill-formed
   }
   ```
 

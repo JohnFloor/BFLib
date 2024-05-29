@@ -171,7 +171,7 @@ void Overloaded(BF::FunctionRef<void (int) noexcept>);
 int main()
 {
     S s;
-    Overloaded(s);                              // static_assert: 'S::operator()' is not 'noexcept'
+    Overloaded(s);                              // static_assert: 'operator()' is not 'noexcept'
 }
 ```
 
@@ -189,11 +189,11 @@ The following properties are checked by `static_assert`'s:
   {
       S s;
       BF::FunctionRef<void ()> f = s;         // OK
-      s();                                    // "as if you would call it" - this is also OK
+      s();                                    // "as if you would call it" - also OK
 
       const S cs;
       BF::FunctionRef<void ()> g = cs;        // static_assert: cannot initialize 'g' with 'cs'
-      cs();                                   // "as if you would call it" - this is also ill-formed
+      cs();                                   // "as if you would call it" - also ill-formed
   }
   ```
 
@@ -207,7 +207,7 @@ The following properties are checked by `static_assert`'s:
   {
       S s;
       BF::FunctionRef<void () const> f = s;   // static_assert: cannot initialize 'f' with 's'
-      const_cast<const S&>(s)();              // "as if you would add 'const' to it" - also ill-formed
+      const_cast<const S&>(s)();              // "as if you would add 'const'" - also ill-formed
   }
   ```
 
@@ -218,7 +218,7 @@ The following properties are checked by `static_assert`'s:
   };
 
   S s;
-  BF::FunctionRef<void () noexcept> f = s;    // static_assert: 'S::operator()' is not 'noexcept'
+  BF::FunctionRef<void () noexcept> f = s;    // static_assert: 'operator()' is not 'noexcept'
   ```
 
 The called `operator()` will be always one, that returns `Ret` and has parameters `Pars...`. No other `operator()` will be called by `BF::FunctionRef`.
@@ -265,21 +265,21 @@ Removes the `const` (but not the `volatile`) qualifier from a `const`-qualified 
 
 ```c++
 const BF::FunctionRef<void ()> f;
-f.ConstCast();                  // OK
+f.ConstCast();              // OK
 
 BF::FunctionRef<void ()> g;
-g.ConstCast();                  // static_assert, because 'g' is already not const
+g.ConstCast();              // static_assert, because 'g' is already not const
 
 const BF::FunctionRef<void () const> h;
-h.ConstCast();                  // static_assert, because 'h()' can be called without any casting
+h.ConstCast();              // static_assert, because 'h()' can be called without any casting
 ```
 
 The value category is preserved. Example:
 
 ```c++
 const BF::FunctionRef<void ()> f;
-f.ConstCast();                  // returns 'BF::FunctionRef<void ()>&' referring to 'f' (lvalue)
-std::move(f).ConstCast();       // returns 'BF::FunctionRef<void ()>&&' referring to 'f' (rvalue)
+f.ConstCast();              // returns 'BF::FunctionRef<void ()>&' referring to 'f' (lvalue)
+std::move(f).ConstCast();   // returns 'BF::FunctionRef<void ()>&&' referring to 'f' (rvalue)
 ```
 
 

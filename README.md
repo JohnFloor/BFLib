@@ -38,7 +38,7 @@ int main() {
 }
 ```
 
-The above wouldn't work with a standard function wrapper, because the 2^nd^ call would be ambiguous.
+The above wouldn't work with a standard function wrapper, because the 2<sup>nd</sup> call would be ambiguous.
 
 
 ### Const-correctness
@@ -49,8 +49,8 @@ The above wouldn't work with a standard function wrapper, because the 2^nd^ call
 
 Const-correctness of standard function wrappers and views:
 - The function wrapper `std::function` is not const-correct. `operator()` is always `const`, thus it can modify the contained object even if the containing `std::function` is `const`. This was corrected in the later `std::move_only_function` and `std::copyable_function`.
-- The function wrappers `std::move_only_function` and `std::copyable_function` are const-correct. Their template parameter supports signatures of the form `Ret (Pars...)` `const`~op~ `(&|&&)`~op~ `noexcept`~op~ and they forward all qualifiers/specifiers to `operator()`.
-- Whether the function view `std::function_ref` is const-correct, is arguable. Its template parameter supports signatures of the form `Ret (Pars...)` `const`~op~ `noexcept`~op~. It forwards the `noexcept` specifier, but not the `const` qualifier, to its `operator()`, which in turn is always `const`. This means, calling the `operator()` of a `const std::function_ref` can alter program state. This, however, seems to be intentional. It mimics the way an `int*` works. In C++ an `int*` member variable in a `const` object is `int* const` and not `const int* const`.
+- The function wrappers `std::move_only_function` and `std::copyable_function` are const-correct. Their template parameter supports signatures of the form `Ret (Pars...)` `const`<sub>op</sub> `(&|&&)`<sub>op</sub> `noexcept`<sub>op</sub> and they forward all qualifiers/specifiers to `operator()`.
+- Whether the function view `std::function_ref` is const-correct, is arguable. Its template parameter supports signatures of the form `Ret (Pars...)` `const`<sub>op</sub> `noexcept`<sub>op</sub>. It forwards the `noexcept` specifier, but not the `const` qualifier, to its `operator()`, which in turn is always `const`. This means, calling the `operator()` of a `const std::function_ref` can alter program state. This, however, seems to be intentional. It mimics the way an `int*` works. In C++ an `int*` member variable in a `const` object is `int* const` and not `const int* const`.
 
 `BF::FunctionRef` chose to forward the `const` qualifier from the template parameter to `operator()`. We think, if `BF::FunctionRef<void ()> f` is a member variable of a `const` object, in 99.9% of the cases the programmer's intention is, that `f()` should not modify the pointee. In the remaining 0.1% one can still apply a `const_cast`. See the [`ConstCast` method](#constcast-method).
 
@@ -86,7 +86,7 @@ There are also `static_assert`'s in the form `"ILE: ..."` (Internal Library Erro
 
 ## Initialization
 
-`BF::FunctionRef`'s template parameter&mdash;the `Signature`&mdash;should be in the form `Ret(Pars...)` `const`~op~ `noexcept`~op~.
+`BF::FunctionRef`'s template parameter&mdash;the `Signature`&mdash;should be in the form `Ret(Pars...)` `const`<sub>op</sub> `noexcept`<sub>op</sub>.
 
 The `const` and `noexcept` in `Signature` is forwarded to `BF::FunctionRef::operator()`:
 - `Signature` contains `const` <=> `BF::FunctionRef::operator()` is `const`.
@@ -109,7 +109,7 @@ int main()
 }
 ```
 
-The call in `main` successfully selects the 1^st^ candidate. The `static_assert` is issued afterwards. In a properly written compiler, the template instantiation context will mention the declaration of the selected `Overloaded` candidate and the call site. This is easier to debug, than the general *no overloaded function could convert all the argument types*, as would be the case with the standard function wrappers, which check everything on their public interface.
+The call in `main` successfully selects the 1<sup>st</sup> candidate. The `static_assert` is issued afterwards. In a properly written compiler, the template instantiation context will mention the declaration of the selected `Overloaded` candidate and the call site. This is easier to debug, than the general *no overloaded function could convert all the argument types*, as would be the case with the standard function wrappers, which check everything on their public interface.
 
 The following properties are checked by `static_assert`'s:
 
@@ -175,7 +175,7 @@ int main()
 }
 ```
 
-The call in `main` successfully selects the 1^st^ candidate. The `static_assert` is issued afterwards.
+The call in `main` successfully selects the 1<sup>st</sup> candidate. The `static_assert` is issued afterwards.
 
 The following properties are checked by `static_assert`'s:
 
@@ -243,7 +243,7 @@ This works as described in [Initialization](#initialization).
 
 ### Copy from friend
 
-`BF::FunctionRef` is copyable from a `BF::FunctionRef` with the same `Ret (Pars...)`, but different `const`~op~ and `noexcept`~op~ in the `Signature`. The source `BF::FunctionRef` has to be more constrained than the target. Example:
+`BF::FunctionRef` is copyable from a `BF::FunctionRef` with the same `Ret (Pars...)`, but different `const`<sub>op</sub> and `noexcept`<sub>op</sub> in the `Signature`. The source `BF::FunctionRef` has to be more constrained than the target. Example:
 
 ```c++
 void Foo();
@@ -327,7 +327,7 @@ To compile it, C++23 features must be enabled.
 Tested on Visual Studio 2022 v17.10.1 with `/std:c++latest`.
 
 
-## Standard function wrappers and views {#std-wrappers}
+## Standard function wrappers and views <a id="std-wrappers"/>
 
 | Type             | Name                      | Link to cppreference.com | Essay/proposal |
 | ---------------- | ------------------------- | ------------------------ | -------------- |

@@ -129,7 +129,7 @@ concept AcceptableFunctor =	NotSelf<Functor, Self> &&
 
 	// SignatureFromType
 
-struct DeductionGuideError : std::type_identity<void(DeductionGuideError)> {};
+struct DeductionGuideError : std::type_identity<void (DeductionGuideError)> {};
 
 template <class>								 struct SignatureFromMethodT;
 template <class Ret, class Type, class... Pars>	 struct SignatureFromMethodT<Ret (Type::*)(Pars...)>							{ using type = Ret (Pars...);       };

@@ -52,6 +52,11 @@ constexpr UChar MaxUChar = UINT8_MAX;
 #define BF_NOINLINE						[[msvc::noinline]]
 
 
+// === BF_IMPLIES ======================================================================================================
+
+#define BF_IMPLIES						<=
+
+
 // === BF_FWD ==========================================================================================================
 
 #define BF_FWD(x)						std::forward<decltype(x)>(x)

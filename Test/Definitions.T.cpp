@@ -63,6 +63,23 @@ BF_COMPILE_TIME_TEST()
 }
 
 
+// === BF_IMPLIES ======================================================================================================
+
+static constexpr bool TestImplies(bool a, bool b)
+{
+	const bool test      = a BF_IMPLIES b;
+	const bool reference = !a || b;
+
+	return test == reference;
+}
+
+
+static_assert(TestImplies(false, false));
+static_assert(TestImplies(false, true));
+static_assert(TestImplies(true,  false));
+static_assert(TestImplies(true,  true));
+
+
 // === BF_FWD ==========================================================================================================
 
 BF_COMPILE_TIME_TEST()

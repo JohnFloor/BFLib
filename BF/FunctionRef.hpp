@@ -339,7 +339,7 @@ public:
 	using Base::operator=;
 
 	Ret operator()(Pars... pars) {
-		return Base::mForwarder(Base::mGenPtr, BF_FWD(pars)...);
+		return this->mForwarder(this->mGenPtr, BF_FWD(pars)...);
 	}
 };
 
@@ -353,7 +353,7 @@ public:
 	using Base::operator=;
 
 	Ret operator()(Pars... pars) const {
-		return Base::mForwarder(Base::mGenPtr, BF_FWD(pars)...);
+		return this->mForwarder(this->mGenPtr, BF_FWD(pars)...);
 	}
 };
 
@@ -367,7 +367,7 @@ public:
 	using Base::operator=;
 
 	Ret operator()(Pars... pars) noexcept {
-		return Base::mForwarder(Base::mGenPtr, BF_FWD(pars)...);
+		return this->mForwarder(this->mGenPtr, BF_FWD(pars)...);
 	}
 };
 
@@ -381,7 +381,7 @@ public:
 	using Base::operator=;
 
 	Ret operator()(Pars... pars) const noexcept {
-		return Base::mForwarder(Base::mGenPtr, BF_FWD(pars)...);
+		return this->mForwarder(this->mGenPtr, BF_FWD(pars)...);
 	}
 };
 

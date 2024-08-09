@@ -272,6 +272,48 @@ BF_COMPILE_TIME_TEST()
 }
 
 
+// === AreConstRelated =================================================================================================
+
+static_assert( BF::AreConstRelated<void,                 void>);
+static_assert( BF::AreConstRelated<void,                 const void>);
+static_assert(!BF::AreConstRelated<void,                 volatile void>);
+static_assert(!BF::AreConstRelated<void,                 const volatile void>);
+static_assert( BF::AreConstRelated<const void,           void>);
+static_assert( BF::AreConstRelated<const void,           const void>);
+static_assert(!BF::AreConstRelated<const void,           volatile void>);
+static_assert(!BF::AreConstRelated<const void,           const volatile void>);
+static_assert(!BF::AreConstRelated<volatile void,        void>);
+static_assert(!BF::AreConstRelated<volatile void,        const void>);
+static_assert( BF::AreConstRelated<volatile void,        volatile void>);
+static_assert( BF::AreConstRelated<volatile void,        const volatile void>);
+static_assert(!BF::AreConstRelated<const volatile void,  void>);
+static_assert(!BF::AreConstRelated<const volatile void,  const void>);
+static_assert( BF::AreConstRelated<const volatile void,  volatile void>);
+static_assert( BF::AreConstRelated<const volatile void,  const volatile void>);
+
+static_assert( BF::AreConstRelated<void*,                const void*>);
+static_assert( BF::AreConstRelated<void*,                const void* const>);
+static_assert(!BF::AreConstRelated<void*,                const void* volatile>);
+static_assert(!BF::AreConstRelated<void*,                const void* const volatile>);
+static_assert(!BF::AreConstRelated<void* volatile,       const void*>);
+static_assert(!BF::AreConstRelated<void* volatile,       const void* const>);
+static_assert( BF::AreConstRelated<void* volatile,       const void* volatile>);
+static_assert( BF::AreConstRelated<void* volatile,       const void* const volatile>);
+
+static_assert( BF::AreConstRelated<int*,                 const int*>);
+static_assert( BF::AreConstRelated<int&,                 const int&>);
+static_assert( BF::AreConstRelated<int&&,                const int&&>);
+static_assert(!BF::AreConstRelated<int,                  int&>);
+static_assert(!BF::AreConstRelated<int,                  int&&>);
+static_assert(!BF::AreConstRelated<int*,                 int**>);
+static_assert(!BF::AreConstRelated<int&,                 int&&>);
+
+static_assert( BF::AreConstRelated<int**,                int const* const* const>);
+static_assert(!BF::AreConstRelated<int**,                int volatile* const* const>);
+static_assert(!BF::AreConstRelated<int**,                int const* volatile* const>);
+static_assert(!BF::AreConstRelated<int**,                int const* const* volatile>);
+static_assert( BF::AreConstRelated<int**&,               int const* const* const&>);
+
 
 // === NotSelf =========================================================================================================
 

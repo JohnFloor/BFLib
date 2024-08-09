@@ -74,6 +74,37 @@ template <class T>
 concept			Abominable = IsAbominableT<T>::value;
 
 
+// === AreConstRelated =================================================================================================
+
+template <class T1, class T2>	struct AreConstRelatedT                                       : std::is_same<T1, T2> {};
+
+template <class T1, class T2>	struct AreConstRelatedT<T1,                const T2>          : AreConstRelatedT<T1, T2> {};
+template <class T1, class T2>	struct AreConstRelatedT<T1,                volatile T2>       : std::false_type {};
+template <class T1, class T2>	struct AreConstRelatedT<T1,                const volatile T2> : std::false_type {};
+
+template <class T1, class T2>	struct AreConstRelatedT<const T1,          T2>                : AreConstRelatedT<T1, T2> {};
+template <class T1, class T2>	struct AreConstRelatedT<const T1,          const T2>          : AreConstRelatedT<T1, T2> {};
+template <class T1, class T2>	struct AreConstRelatedT<const T1,          volatile T2>       : std::false_type {};
+template <class T1, class T2>	struct AreConstRelatedT<const T1,          const volatile T2> : std::false_type {};
+
+template <class T1, class T2>	struct AreConstRelatedT<volatile T1,       T2>                : std::false_type {};
+template <class T1, class T2>	struct AreConstRelatedT<volatile T1,       const T2>          : std::false_type {};
+template <class T1, class T2>	struct AreConstRelatedT<volatile T1,       volatile T2>       : AreConstRelatedT<T1, T2> {};
+template <class T1, class T2>	struct AreConstRelatedT<volatile T1,       const volatile T2> : AreConstRelatedT<T1, T2> {};
+
+template <class T1, class T2>	struct AreConstRelatedT<const volatile T1, T2>                : std::false_type {};
+template <class T1, class T2>	struct AreConstRelatedT<const volatile T1, const T2>          : std::false_type {};
+template <class T1, class T2>	struct AreConstRelatedT<const volatile T1, volatile T2>       : AreConstRelatedT<T1, T2> {};
+template <class T1, class T2>	struct AreConstRelatedT<const volatile T1, const volatile T2> : AreConstRelatedT<T1, T2> {};
+
+template <class T1, class T2>	struct AreConstRelatedT<T1*,               T2*>               : AreConstRelatedT<T1, T2> {};
+template <class T1, class T2>	struct AreConstRelatedT<T1&,               T2&>               : AreConstRelatedT<T1, T2> {};
+template <class T1, class T2>	struct AreConstRelatedT<T1&&,              T2&&>              : AreConstRelatedT<T1, T2> {};
+
+template <class Type1, class Type2>
+constexpr bool AreConstRelated = AreConstRelatedT<Type1, Type2>::value;
+
+
 // === NotSelf =========================================================================================================
 // Used to prevent forwarding reference ctors./assignments from acting as copy/move ctor./assignment.
 

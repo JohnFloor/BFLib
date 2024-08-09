@@ -786,11 +786,14 @@ TEST(FunctionRef, ParameterPassing)
 }
 
 
-template <class... Types>
-static void TestConstCast(Types&... values)
+template <class Type, class... Types>
+static void TestConstCast(Type& value, Types&... values)
 {
-	([] { static_assert(std::is_same_v<decltype(values.ConstCast()),            std::remove_const_t<Types>&>);  }, ...);
-	([] { static_assert(std::is_same_v<decltype(std::move(values).ConstCast()), std::remove_const_t<Types>&&>); }, ...);
+	static_assert(std::is_same_v<decltype(value.ConstCast()),            std::remove_const_t<Type>&>);
+	static_assert(std::is_same_v<decltype(std::move(value).ConstCast()), std::remove_const_t<Type>&&>);
+
+	if constexpr (sizeof...(Types) > 0)
+		TestConstCast(values...);
 }
 
 

@@ -845,6 +845,86 @@ TEST(FunctionRef, ConstCast)
 }
 
 
+TEST(FunctionRef, ConstCastToSignature)
+{
+	[[gsl::suppress(es.56)]]        // allow std::move on constant variable
+	{
+		// Checking all combinations of the declaration.
+		// - volatile BF::FunctionRef is not usable. You can't call operator() on it.
+		               BF::FunctionRef<const int& ()> f;
+		const          BF::FunctionRef<const int& ()> cf;
+		volatile       BF::FunctionRef<const int& ()> vf;
+		const volatile BF::FunctionRef<const int& ()> cvf;
+
+		std::same_as<               BF::FunctionRef<int& ()>&>  decltype(auto) f1   = f.ConstCast<int& ()>();
+		std::same_as<const          BF::FunctionRef<int& ()>&>  decltype(auto) cf1  = cf.ConstCast<int& ()>();
+		std::same_as<volatile       BF::FunctionRef<int& ()>&>  decltype(auto) vf1  = vf.ConstCast<int& ()>();
+		std::same_as<const volatile BF::FunctionRef<int& ()>&>  decltype(auto) cvf1 = cvf.ConstCast<int& ()>();
+
+		std::same_as<               BF::FunctionRef<int& ()>&&> decltype(auto) f2   = std::move(f).ConstCast<int& ()>();
+		std::same_as<const          BF::FunctionRef<int& ()>&&> decltype(auto) cf2  = std::move(cf).ConstCast<int& ()>();
+		std::same_as<volatile       BF::FunctionRef<int& ()>&&> decltype(auto) vf2  = std::move(vf).ConstCast<int& ()>();
+		std::same_as<const volatile BF::FunctionRef<int& ()>&&> decltype(auto) cvf2 = std::move(cvf).ConstCast<int& ()>();
+	}
+
+	{
+		const auto fPtr = +[] (int& x) noexcept { x += 111; };
+
+		BF::FunctionRef<void (int&)>                f   = fPtr;
+		BF::FunctionRef<void (int&) const>          fc  = fPtr;
+		BF::FunctionRef<void (int&) noexcept>       fn  = fPtr;
+		BF::FunctionRef<void (int&) const noexcept> fcn = fPtr;
+
+		EXPECT_EQ(&f,   (void*) &f.ConstCast<void (const int&)>());
+		EXPECT_EQ(&fc,  (void*) &fc.ConstCast<void (const int&) const>());
+		EXPECT_EQ(&fn,  (void*) &fn.ConstCast<void (const int&) noexcept>());
+		EXPECT_EQ(&fcn, (void*) &fcn.ConstCast<void (const int&) const noexcept>());
+
+		int        i  = 0;
+		const int& ci = i;
+
+		f.ConstCast<void (const int&)>()(ci);								EXPECT_EQ(111, i);
+		fc.ConstCast<void (const int&) const>()(ci);						EXPECT_EQ(222, i);
+		fn.ConstCast<void (const int&) noexcept>()(ci);						EXPECT_EQ(333, i);
+		fcn.ConstCast<void (const int&) const noexcept>()(ci);				EXPECT_EQ(444, i);
+
+		std::move(f).ConstCast<void (const int&)>()(ci);					EXPECT_EQ(555, i);
+		std::move(fc).ConstCast<void (const int&) const>()(ci);				EXPECT_EQ(666, i);
+		std::move(fn).ConstCast<void (const int&) noexcept>()(ci);			EXPECT_EQ(777, i);
+		std::move(fcn).ConstCast<void (const int&) const noexcept>()(ci);	EXPECT_EQ(888, i);
+	}
+
+	{
+		struct MyVector : std::vector<double> {
+			using std::vector<double>::vector;
+
+			void Enumerate(BF::FunctionRef<void (double&)> f)              { Enumerate(f.ConstCast<void (const double&)>()); }
+			void Enumerate(BF::FunctionRef<void (const double&)> f) const  { for (const double& item : *this) f(item); }
+		};
+
+		MyVector vec { 0.0, 0.0, 0.0 };
+
+		vec.Enumerate([] (double& item) { item = 1.0; });
+
+		EXPECT_EQ(1.0, vec[0]);
+		EXPECT_EQ(1.0, vec[1]);
+		EXPECT_EQ(1.0, vec[2]);
+	}
+
+//	BF::FunctionRef<void ()>{}.ConstCast<void () &>();			// [CompilationError]: 'Signature' must be a function type in the form 'Ret (Pars...) [const] [noexcept]'.
+
+//	BF::FunctionRef<void () const>{}.ConstCast<void ()>();		// [CompilationError]: 'Signature' of BF::FunctionRef is const, therefore 'ToSignature' of ConstCast() should also be const.
+//	BF::FunctionRef<void ()>{}.ConstCast<void () const>();		// [CompilationError]: 'Signature' of BF::FunctionRef is not const, therefore 'ToSignature' of ConstCast() should also be not const.
+
+//	BF::FunctionRef<void () noexcept>{}.ConstCast<void ()>();	// [CompilationError]: 'Signature' of BF::FunctionRef is noexcept, therefore 'ToSignature' of ConstCast() should also be noexcept.
+//	BF::FunctionRef<void ()>{}.ConstCast<void () noexcept>();	// [CompilationError]: 'Signature' of BF::FunctionRef is not noexcept, therefore 'ToSignature' of ConstCast() should also be not noexcept.
+
+//	BF::FunctionRef<int (int)>{}.ConstCast<int ()>();			// [CompilationError]: 'ToSignature' of ConstCast() should contain the same number of parameters as 'Signature' of BF::FunctionRef.
+//	BF::FunctionRef<int (int)>{}.ConstCast<bool (int)>();		// [CompilationError]: ConstCast() can only change the constness of the return type.
+//	BF::FunctionRef<int (int)>{}.ConstCast<int (bool)>();		// [CompilationError]: ConstCast() can only change the constness of the parameter types.
+}
+
+
 TEST(FunctionRef, DeductionGuide)
 {
 	struct S {

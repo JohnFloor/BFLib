@@ -127,6 +127,24 @@ concept AcceptableFunctor =	NotSelf<Functor, Self> &&
 							std::is_class_v<std::remove_cvref_t<Functor>> &&
 							HasAnyFunctionCallOperator<Functor, Ret, Pars...>;
 
+	// ReplaceTemplateArgument
+
+template <class ClassTemplateInstantiation, class NewArg>
+struct ReplaceTemplateArgumentT {
+	static_assert(false, "ILE: 'ClassTemplateInstantiation' should be a class template instantiation with one type parameter.");
+};
+
+template <template <class> class ClassTemplate, class CurrentArg,  class NewArg>
+struct ReplaceTemplateArgumentT<ClassTemplate<CurrentArg>, NewArg> : std::type_identity<ClassTemplate<NewArg>> {};
+
+template <class ClassTemplateInstantiation, class NewArg>
+using ReplaceTemplateArgument = ReplaceTemplateArgumentT<ClassTemplateInstantiation, NewArg>::type;
+
+	// ConstCastResult
+
+template <class Self, class ToSignature>
+using ConstCastResult = std26::copy_cvref_t<Self, ReplaceTemplateArgument<std::remove_cvref_t<Self>, ToSignature>>;
+
 	// SignatureFromType
 
 struct DeductionGuideError : std::type_identity<void (DeductionGuideError)> {};
@@ -264,6 +282,23 @@ private:
 		}
 	}
 
+	template <bool ToIsConst, bool ToIsNoexcept, class ToRet, class... ToPars>
+	static void CheckToSignatureForConstCast(Base<ToIsConst, ToIsNoexcept, ToRet, ToPars...>*) {
+		if constexpr (IsConst)
+			static_assert(ToIsConst, "'Signature' of BF::FunctionRef is const, therefore 'ToSignature' of ConstCast() should also be const.");
+		else
+			static_assert(!ToIsConst, "'Signature' of BF::FunctionRef is not const, therefore 'ToSignature' of ConstCast() should also be not const.");
+
+		if constexpr (IsNoexcept)
+			static_assert(ToIsNoexcept, "'Signature' of BF::FunctionRef is noexcept, therefore 'ToSignature' of ConstCast() should also be noexcept.");
+		else
+			static_assert(!ToIsNoexcept, "'Signature' of BF::FunctionRef is not noexcept, therefore 'ToSignature' of ConstCast() should also be not noexcept.");
+
+		static_assert(sizeof...(ToPars) == sizeof...(Pars), "'ToSignature' of ConstCast() should contain the same number of parameters as 'Signature' of BF::FunctionRef.");
+		static_assert(AreConstRelated<Ret, ToRet>, "ConstCast() can only change the constness of the return type.");
+		static_assert((AreConstRelated<Pars, ToPars> && ...), "ConstCast() can only change the constness of the parameter types.");
+	}
+
 public:
 	[[gsl::suppress(type.6)]]	// 'Base::mGenPtr' is intentionally uninitialized
 	Base() {
@@ -311,6 +346,14 @@ public:
 		static_assert(!IsConst, "No need to cast away constness, 'operator()' is const.");
 
 		return const_cast<RemoveConstBeforeRef<Self>&&>(self);
+	}
+
+	template <class ToSignature, class Self>
+	ConstCastResult<Self, ToSignature>&& ConstCast(this Self&& self) {
+		ReplaceTemplateArgument<std::remove_cvref_t<Self>, ToSignature>* dummyFunctionRefWithToSignature = nullptr;
+		CheckToSignatureForConstCast(dummyFunctionRefWithToSignature);
+
+		return reinterpret_cast<ConstCastResult<Self, ToSignature>&&>(self);
 	}
 
 protected:

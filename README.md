@@ -259,7 +259,7 @@ BF::FunctionRef<void () const> target2 = target;    // error: source is less con
 Calls the pointed callable.
 
 
-### `ConstCast()` method
+### `ConstCast()` method, with no template arguments
 
 Removes the `const` (but not the `volatile`) qualifier from a `const`-qualified `BF::FunctionRef`. It doesn't change the `Signature`. The method triggers a `static_assert`, if the cast is unnecessary. Example:
 
@@ -280,6 +280,37 @@ The value category is preserved. Example:
 const BF::FunctionRef<void ()> f;
 f.ConstCast();              // returns 'BF::FunctionRef<void ()>&' referring to 'f' (lvalue)
 std::move(f).ConstCast();   // returns 'BF::FunctionRef<void ()>&&' referring to 'f' (rvalue)
+```
+
+
+### `ConstCast<ToSignature>()` method
+
+Adds or removes `const` (but not `volatile`) to/from the `Signature` of `BF::FunctionRef`. `ToSignature` is the new signature.
+
+- If `Signature` is/is not `const`, `ToSignature` must also be/not be `const`.
+- If `Signature` is/is not `noexcept`, `ToSignature` must also be/not be `noexcept`.
+- The number of function parameters in `ToSignature` must be the same as in `Signature`.
+- The return type and the parameter types of `ToSignature` must differ only in the presence or absence of `const` from the corresponding type in `Signature`. The difference can occur at any level behind `*`, `&` or `&&`, but unlimited levels of C arrays (`[]`, `[N]`) are currently not supported.
+
+Examples:
+
+```c++
+BF::FunctionRef<void ()> f1;
+f1.ConstCast<void () const>();                                          // error
+
+BF::FunctionRef<signed ()> f2;
+f2.ConstCast<unsigned ()>();                                            // error
+
+BF::FunctionRef<volatile int&& (int*&, int const* const&)> f3;
+f3.ConstCast<const volatile int&& (int const* const&, int*&)>();        // OK
+```
+
+The *cv* qualifiers and the value category of `BF::FunctionRef` is preserved. Example:
+
+```c++
+const BF::FunctionRef<const void* ()> f;
+f.ConstCast<void* ()>();              // 'const BF::FunctionRef<void* ()>&' referring to 'f'
+std::move(f).ConstCast<void* ()>();   // 'const BF::FunctionRef<void* ()>&&' referring to 'f'
 ```
 
 

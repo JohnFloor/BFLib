@@ -45,7 +45,7 @@ struct StructReturningBoolEtAl {
 
 
 struct Counter {
-	void operator()() { count++; }
+	void operator()() noexcept { count++; }
 
 	int count = 0;
 };
@@ -786,25 +786,33 @@ TEST(FunctionRef, ParameterPassing)
 }
 
 
-template <class Type, class... Types>
-static void TestConstCast(Type& value, Types&... values)
-{
-	static_assert(std::is_same_v<decltype(value.ConstCast()),            std::remove_const_t<Type>&>);
-	static_assert(std::is_same_v<decltype(std::move(value).ConstCast()), std::remove_const_t<Type>&&>);
-
-	if constexpr (sizeof...(Types) > 0)
-		TestConstCast(values...);
-}
-
-
 TEST(FunctionRef, ConstCast)
 {
+	{
+		// Checking all combinations of the declaration.
+		// - Some of these can't be called in evaluated context, because of static_assert's.
+		// - volatile BF::FunctionRef is not usable. You can't call operator() on it.
+		               BF::FunctionRef<void ()> f;
+		const          BF::FunctionRef<void ()> cf;
+		volatile       BF::FunctionRef<void ()> vf;
+		const volatile BF::FunctionRef<void ()> cvf;
+
+		static_assert(requires { { f.ConstCast()              } -> std::same_as<         BF::FunctionRef<void ()>&>;  });
+		static_assert(requires { { cf.ConstCast()             } -> std::same_as<         BF::FunctionRef<void ()>&>;  });
+		static_assert(requires { { vf.ConstCast()             } -> std::same_as<volatile BF::FunctionRef<void ()>&>;  });
+		static_assert(requires { { cvf.ConstCast()            } -> std::same_as<volatile BF::FunctionRef<void ()>&>;  });
+
+		static_assert(requires { { std::move(f).ConstCast()   } -> std::same_as<         BF::FunctionRef<void ()>&&>; });
+		static_assert(requires { { std::move(cf).ConstCast()  } -> std::same_as<         BF::FunctionRef<void ()>&&>; });
+		static_assert(requires { { std::move(vf).ConstCast()  } -> std::same_as<volatile BF::FunctionRef<void ()>&&>; });
+		static_assert(requires { { std::move(cvf).ConstCast() } -> std::same_as<volatile BF::FunctionRef<void ()>&&>; });
+	}
+
 	{
 		BF::FunctionRef<void ()>                f;
 		BF::FunctionRef<void () const>          fc;
 		BF::FunctionRef<void () noexcept>       fn;
 		BF::FunctionRef<void () const noexcept> fcn;
-		TestConstCast(f, fc, fn, fcn);
 
 		// f.ConstCast();										// [CompilationError]: No need to cast away constness, '*this' is already not const.
 		// fc.ConstCast();										// [CompilationError]: No need to cast away constness, '*this' is already not const.
@@ -813,43 +821,27 @@ TEST(FunctionRef, ConstCast)
 	}
 
 	{
-		const BF::FunctionRef<void ()>                f;
+		Counter c;
+
+		const BF::FunctionRef<void ()>                f  = c;
 		const BF::FunctionRef<void () const>          fc;
-		const BF::FunctionRef<void () noexcept>       fn;
+		const BF::FunctionRef<void () noexcept>       fn = c;
 		const BF::FunctionRef<void () const noexcept> fcn;
-		TestConstCast(f, fc, fn, fcn);
 
 		EXPECT_EQ(&f, &f.ConstCast());
+		f.ConstCast()();
+		EXPECT_EQ(1, c.count);
+
 		// fc.ConstCast();										// [CompilationError]: No need to cast away constness, 'operator()' is const.
+
 		EXPECT_EQ(&fn, &fn.ConstCast());
+		fn.ConstCast()();
+		EXPECT_EQ(2, c.count);
+
 		// fcn.ConstCast();										// [CompilationError]: No need to cast away constness, 'operator()' is const.
 	}
 
-	{
-		volatile BF::FunctionRef<void ()>                f;
-		volatile BF::FunctionRef<void () const>          fc;
-		volatile BF::FunctionRef<void () noexcept>       fn;
-		volatile BF::FunctionRef<void () const noexcept> fcn;
-		TestConstCast(f, fc, fn, fcn);
-
-		// f.ConstCast();										// [CompilationError]: No need to cast away constness, '*this' is already not const.
-		// fc.ConstCast();										// [CompilationError]: No need to cast away constness, '*this' is already not const.
-		// fn.ConstCast();										// [CompilationError]: No need to cast away constness, '*this' is already not const.
-		// fcn.ConstCast();										// [CompilationError]: No need to cast away constness, '*this' is already not const.
-	}
-
-	{
-		const volatile BF::FunctionRef<void ()>                f;
-		const volatile BF::FunctionRef<void () const>          fc;
-		const volatile BF::FunctionRef<void () noexcept>       fn;
-		const volatile BF::FunctionRef<void () const noexcept> fcn;	
-		TestConstCast(f, fc, fn, fcn);
-
-		EXPECT_EQ(&f, &f.ConstCast());
-		// fc.ConstCast();										// [CompilationError]: No need to cast away constness, 'operator()' is const.
-		EXPECT_EQ(&fn, &fn.ConstCast());
-		// fcn.ConstCast();										// [CompilationError]: No need to cast away constness, 'operator()' is const.
-	}
+	// volatile BF::FunctionRef is not usable. You can't call operator() on it.
 }
 
 

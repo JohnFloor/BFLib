@@ -18,29 +18,31 @@ namespace {
 struct FunctorArchetype : BF::ImmobileClass, BF::PoisonedAddrOpClass {};
 
 
-static UInt8	OverloadedFunction()		{ return 1; }
-static UInt8	OverloadedFunction(int)		{ return 2; }
+template <class Signature>
+struct Single;
 
+template <class Ret, class... Pars>
+struct Single<Ret (Pars...)> {
+	Ret operator()(Pars...) const noexcept			{ return Ret(); }
 
-struct StructWithOverloadedOperator {
-	UInt8		operator()() const			{ return 1; }
-	UInt8		operator()(int) const		{ return 2; }
+	static Ret  SF(Pars...) noexcept				{ return Ret(); }
 };
 
 
-static void		ReturnVoid()				{}
-static bool		ReturnBool()				{ return true; }
+template <class>
+struct DummyPar {};
 
 
-struct StructReturningVoidEtAl {
-	void operator()() const					{}
-	void operator()(const char*) const		{}
-};
+template <class Signature1, class Signature2 = void (DummyPar<Signature1>)>
+struct Double;
 
+template <class Ret1, class... Pars1, class Ret2, class... Pars2>
+struct Double<Ret1 (Pars1...), Ret2 (Pars2...)> {
+	Ret1 operator()(Pars1...) const noexcept		{ return (Ret1) 1; }
+	Ret2 operator()(Pars2...) const noexcept		{ return (Ret2) 2; }
 
-struct StructReturningBoolEtAl {
-	bool operator()() const					{ return true; }
-	void operator()(const int*) const		{}
+	static Ret1  SF(Pars1...) noexcept				{ return (Ret1) 1; }
+	static Ret2  SF(Pars2...) noexcept				{ return (Ret2) 2; }
 };
 
 
@@ -166,41 +168,115 @@ TEST(StdFunctionDemo, ConstIncorrectness)						// https://wg21.link/N4348
 }
 
 
-TEST(StdFunctionDemo, InitializationFromOverloaded)
+TEST(StdFunctionDemo, FromOverloaded)
 {
-	// std::function<UInt8 ()> fail1 = &OverloadedFunction;		// cannot infer template argument of templated ctor.
-	// auto fail2 = &OverloadedFunction;						// same reaseon: cannot infer 'auto'
+	using Doub = Double<int (), int (bool)>;
 
-	StructWithOverloadedOperator s;								// this works, because it's callable with the given arguments
-	std::function<UInt8 ()>    s1 = s;
-	std::function<UInt8 (int)> s2 = s;
+	// It's not possible to infer the template argument of the templated ctor./assignment from an 'oveloaded-function'.
+	// The 'auto' example below works the same way, and it also doesn't compile.
 
-	EXPECT_EQ(1, s1());
-	EXPECT_EQ(2, s2(0));
+//	{ std::function<int ()>    f = &Doub::SF; }			// error
+//	{ std::function<int ()> f; f = &Doub::SF; }			// error
+//	{ auto fail = &Doub::SF; }							// error: cannot deduce type for 'auto' from 'overloaded-function'
+
+	// This works. The template argument can be inferred as 'Doub', and 'Doub' is callable with the given arguments.
+
+	{ Doub d; std::function<int ()>        f = d;   EXPECT_EQ(1, f());      }
+	{ Doub d; std::function<int ()>     f; f = d;   EXPECT_EQ(1, f());      }
+	{ Doub d; std::function<int (bool)>    f = d;   EXPECT_EQ(2, f(false)); }
+	{ Doub d; std::function<int (bool)> f; f = d;   EXPECT_EQ(2, f(false)); }
 }
 
 
-TEST(StdFunctionDemo, OverloadingOnCallableSignature)
+TEST(StdFunctionDemo, OverloadingOnCallableSignature_Convertible)
 {
 	struct S {
-		static int	NotConvertible(const std::function<void (char*)>&)	{ return 1; }
-		static int	NotConvertible(const std::function<void (int*)>&)	{ return 2; }
-
-		static void	Enumerate(const std::function<void ()>&)	{}
-		static void	Enumerate(const std::function<bool ()>&)	{}
+		int	Enumerate(const std::function<void ()>&)		{ return 1; }
+		int	Enumerate(const std::function<bool ()>&)		{ return 2; }
 	};
 
-	EXPECT_EQ(1, S::NotConvertible([] (char*) {}));				// possible, if one signature is not "convertible" to the other
-	EXPECT_EQ(2, S::NotConvertible([] (int*) {}));				// possible, if one signature is not "convertible" to the other
+	S s;
 
-	S::Enumerate(&ReturnVoid);
-	// S::Enumerate(&ReturnBool);								// ambiguous: could be both S::Enumerate() functions
+	EXPECT_EQ(1, s.Enumerate(std::function<void ()>{}));
+	EXPECT_EQ(2, s.Enumerate(std::function<bool ()>{}));
 
-	S::Enumerate([] {});
-	// S::Enumerate([] { return true; });						// ambiguous: could be both S::Enumerate() functions
+	EXPECT_EQ(1, s.Enumerate(Single<void ()>::SF));
+//	s.Enumerate(Single<bool ()>::SF);					// error (ambiguous)
 
-	S::Enumerate(StructReturningVoidEtAl{});
-	// S::Enumerate(StructReturningBoolEtAl{});					// ambiguous: could be both S::Enumerate() functions
+	EXPECT_EQ(1, s.Enumerate(Single<void ()>{}));
+//	s.Enumerate(Single<bool ()>{});						// error (ambiguous)
+
+//	s.Enumerate(Double<void ()>::SF);					// error (won't initialize from 'overloaded-function')
+//	s.Enumerate(Double<bool ()>::SF);					// error (won't initialize from 'overloaded-function')
+
+	EXPECT_EQ(1, s.Enumerate(Double<void ()>{}));
+//	s.Enumerate(Double<bool ()>{});						// error (ambiguous)
+}
+
+
+TEST(StdFunctionDemo, OverloadingOnCallableSignature_NotConvertible)
+{
+	struct S {
+		int	Enumerate(const std::function<short* ()>&)		{ return 1; }
+		int	Enumerate(const std::function<long* ()>&)		{ return 2; }
+	};
+
+	S s;
+
+	EXPECT_EQ(1, s.Enumerate(std::function<short* ()>{}));
+	EXPECT_EQ(2, s.Enumerate(std::function<long* ()>{}));
+
+	EXPECT_EQ(1, s.Enumerate(Single<short* ()>::SF));
+	EXPECT_EQ(2, s.Enumerate(Single<long* ()>::SF));
+
+	EXPECT_EQ(1, s.Enumerate(Single<short* ()>{}));
+	EXPECT_EQ(2, s.Enumerate(Single<long* ()>{}));
+
+//	s.Enumerate(Double<short* ()>::SF);					// error (won't initialize from 'overloaded-function')
+//	s.Enumerate(Double<long* ()>::SF);					// error (won't initialize from 'overloaded-function')
+
+	EXPECT_EQ(1, s.Enumerate(Double<short* ()>{}));
+	EXPECT_EQ(2, s.Enumerate(Double<long* ()>{}));
+}
+
+
+TEST(StdFunctionDemo, OverloadingOnCallableSignature_Const)
+{
+	struct S {
+		int	Enumerate(const std::function<void (double&)>&)				{ return 1; }
+		int	Enumerate(const std::function<void (const double&)>&) const	{ return 2; }
+	};
+
+	S s;
+
+	EXPECT_EQ(1, s.Enumerate(std::function<void (double&)>{}));
+//	s.Enumerate(std::function<void (const double&)>{});				// error: overloaded functions have similar conversions
+
+	EXPECT_EQ(1, s.Enumerate(Single<void (double&)>::SF));
+	EXPECT_EQ(1, s.Enumerate(Single<void (const double&)>::SF));	// surprise! (calls #1)
+
+	EXPECT_EQ(1, s.Enumerate(Single<void (double&)>{}));
+	EXPECT_EQ(1, s.Enumerate(Single<void (const double&)>{}));		// surprise! (calls #1)
+
+//	s.Enumerate(Double<void (double&)>::SF);						// error (won't initialize from 'overloaded-function')
+//	s.Enumerate(Double<void (const double&)>::SF);					// error (won't initialize from 'overloaded-function')
+
+	EXPECT_EQ(1, s.Enumerate(Double<void (double&)>{}));
+	EXPECT_EQ(1, s.Enumerate(Double<void (const double&)>{}));		// surprise! (calls #1)
+
+	const S cs;
+
+	EXPECT_EQ(2, cs.Enumerate(BF::FunctionRef<void (const double&)>{}));
+	EXPECT_EQ(2, cs.Enumerate(Single<void (const double&)>::SF));
+	EXPECT_EQ(2, cs.Enumerate(Single<void (const double&)>{}));
+//	cs.Enumerate(Double<void (const double&)>::SF);					// error (won't initialize from 'overloaded-function')
+	EXPECT_EQ(2, cs.Enumerate(Double<void (const double&)>{}));
+}
+
+
+TEST(StdFunctionDemo, OverloadingOnCallableSignature_ConstConvertible)
+{
+	// "Const" demo is bad enough. No need to demonstrate this.
 }
 
 
@@ -208,38 +284,141 @@ TEST(StdFunctionDemo, OverloadingOnCallableSignature)
 ////// Test cases //////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-TEST(FunctionRef, InitializationFromOverloaded)
+TEST(FunctionRef, FromOverloaded)
 {
-	BF::FunctionRef<UInt8 ()>    f1 = &OverloadedFunction;
-	BF::FunctionRef<UInt8 (int)> f2 = &OverloadedFunction;
+	using Doub = Double<int (), int (bool)>;
 
-	EXPECT_EQ(1, f1());
-	EXPECT_EQ(2, f2(0));
+	{         BF::FunctionRef<int ()>        f = &Doub::SF; EXPECT_EQ(1, f());      }
+	{         BF::FunctionRef<int ()>     f; f = &Doub::SF; EXPECT_EQ(1, f());      }
+	{         BF::FunctionRef<int (bool)>    f = &Doub::SF; EXPECT_EQ(2, f(false)); }
+	{         BF::FunctionRef<int (bool)> f; f = &Doub::SF; EXPECT_EQ(2, f(false)); }
 
-	StructWithOverloadedOperator s;
-	BF::FunctionRef<UInt8 ()>    s1 = s;
-	BF::FunctionRef<UInt8 (int)> s2 = s;
-
-	EXPECT_EQ(1, s1());
-	EXPECT_EQ(2, s2(0));
+	{ Doub d; BF::FunctionRef<int ()>        f = d;         EXPECT_EQ(1, f());      }
+	{ Doub d; BF::FunctionRef<int ()>     f; f = d;         EXPECT_EQ(1, f());      }
+	{ Doub d; BF::FunctionRef<int (bool)>    f = d;         EXPECT_EQ(2, f(false)); }
+	{ Doub d; BF::FunctionRef<int (bool)> f; f = d;         EXPECT_EQ(2, f(false)); }
 }
 
 
-TEST(FunctionRef, OverloadingOnCallableSignature)
+TEST(FunctionRef, OverloadingOnCallableSignature_Convertible)
 {
 	struct S {
-		static int	Enumerate(BF::FunctionRef<void ()>)		{ return 1; }
-		static int	Enumerate(BF::FunctionRef<bool ()>)		{ return 2; }
+		int	Enumerate(BF::FunctionRef<void ()>)		{ return 1; }
+		int	Enumerate(BF::FunctionRef<bool ()>)		{ return 2; }
 	};
 
-	EXPECT_EQ(1, S::Enumerate(&ReturnVoid));
-	EXPECT_EQ(2, S::Enumerate(&ReturnBool));
+	S s;
 
-	EXPECT_EQ(1, S::Enumerate([] {}));
-	EXPECT_EQ(2, S::Enumerate([] { return true; }));
+	EXPECT_EQ(1, s.Enumerate(BF::FunctionRef<void ()>{}));
+	EXPECT_EQ(2, s.Enumerate(BF::FunctionRef<bool ()>{}));
 
-	EXPECT_EQ(1, S::Enumerate(StructReturningVoidEtAl{}));
-	EXPECT_EQ(2, S::Enumerate(StructReturningBoolEtAl{}));
+	EXPECT_EQ(1, s.Enumerate(Single<void ()>::SF));
+	EXPECT_EQ(2, s.Enumerate(Single<bool ()>::SF));
+
+	EXPECT_EQ(1, s.Enumerate(Single<void ()>{}));
+	EXPECT_EQ(2, s.Enumerate(Single<bool ()>{}));
+
+	EXPECT_EQ(1, s.Enumerate(Double<void ()>::SF));
+	EXPECT_EQ(2, s.Enumerate(Double<bool ()>::SF));
+
+	EXPECT_EQ(1, s.Enumerate(Double<void ()>{}));
+	EXPECT_EQ(2, s.Enumerate(Double<bool ()>{}));
+}
+
+
+TEST(FunctionRef, OverloadingOnCallableSignature_NotConvertible)
+{
+	// "Convertible" passes for BF::FunctionRef.
+	// "Convertible" test subsumes "NotConvertible". No need to test this separately.
+}
+
+
+TEST(FunctionRef, OverloadingOnCallableSignature_Const)
+{
+	struct S {
+		int	Enumerate(BF::FunctionRef<void (double&)>)				{ return 1; }
+		int	Enumerate(BF::FunctionRef<void (const double&)>) const	{ return 2; }
+	};
+
+	S s;
+
+	EXPECT_EQ(1, s.Enumerate(BF::FunctionRef<void (double&)>{}));
+	EXPECT_EQ(2, s.Enumerate(BF::FunctionRef<void (const double&)>{}));
+
+	EXPECT_EQ(1, s.Enumerate(Single<void (double&)>::SF));
+	EXPECT_EQ(2, s.Enumerate(Single<void (const double&)>::SF));
+
+	EXPECT_EQ(1, s.Enumerate(Single<void (double&)>{}));
+	EXPECT_EQ(2, s.Enumerate(Single<void (const double&)>{}));
+
+	EXPECT_EQ(1, s.Enumerate(Double<void (double&)>::SF));
+	EXPECT_EQ(2, s.Enumerate(Double<void (const double&)>::SF));
+
+	EXPECT_EQ(1, s.Enumerate(Double<void (double&)>{}));
+	EXPECT_EQ(2, s.Enumerate(Double<void (const double&)>{}));
+
+	const S cs;
+
+	EXPECT_EQ(2, cs.Enumerate(BF::FunctionRef<void (const double&)>{}));
+	EXPECT_EQ(2, cs.Enumerate(Single<void (const double&)>::SF));
+	EXPECT_EQ(2, cs.Enumerate(Single<void (const double&)>{}));
+	EXPECT_EQ(2, cs.Enumerate(Double<void (const double&)>::SF));
+	EXPECT_EQ(2, cs.Enumerate(Double<void (const double&)>{}));
+}
+
+
+TEST(FunctionRef, OverloadingOnCallableSignature_ConstConvertible)
+{
+	struct S {
+		int	Enumerate(BF::FunctionRef<void (double&)>)				{ return 1; }
+		int	Enumerate(BF::FunctionRef<void (const double&)>) const	{ return 2; }
+		int	Enumerate(BF::FunctionRef<bool (double&)>)				{ return 3; }
+		int	Enumerate(BF::FunctionRef<bool (const double&)>) const	{ return 4; }
+	};
+
+	S s;
+
+	EXPECT_EQ(1, s.Enumerate(BF::FunctionRef<void (double&)>{}));
+	EXPECT_EQ(2, s.Enumerate(BF::FunctionRef<void (const double&)>{}));
+	EXPECT_EQ(3, s.Enumerate(BF::FunctionRef<bool (double&)>{}));
+	EXPECT_EQ(4, s.Enumerate(BF::FunctionRef<bool (const double&)>{}));
+
+	EXPECT_EQ(1, s.Enumerate(Single<void (double&)>::SF));
+	EXPECT_EQ(2, s.Enumerate(Single<void (const double&)>::SF));
+	EXPECT_EQ(3, s.Enumerate(Single<bool (double&)>::SF));
+	EXPECT_EQ(4, s.Enumerate(Single<bool (const double&)>::SF));
+
+	EXPECT_EQ(1, s.Enumerate(Single<void (double&)>{}));
+	EXPECT_EQ(2, s.Enumerate(Single<void (const double&)>{}));
+	EXPECT_EQ(3, s.Enumerate(Single<bool (double&)>{}));
+	EXPECT_EQ(4, s.Enumerate(Single<bool (const double&)>{}));
+
+	EXPECT_EQ(1, s.Enumerate(Double<void (double&)>::SF));
+	EXPECT_EQ(2, s.Enumerate(Double<void (const double&)>::SF));
+	EXPECT_EQ(3, s.Enumerate(Double<bool (double&)>::SF));
+	EXPECT_EQ(4, s.Enumerate(Double<bool (const double&)>::SF));
+
+	EXPECT_EQ(1, s.Enumerate(Double<void (double&)>{}));
+	EXPECT_EQ(2, s.Enumerate(Double<void (const double&)>{}));
+	EXPECT_EQ(3, s.Enumerate(Double<bool (double&)>{}));
+	EXPECT_EQ(4, s.Enumerate(Double<bool (const double&)>{}));
+
+	const S cs;
+
+	EXPECT_EQ(2, cs.Enumerate(BF::FunctionRef<void (const double&)>{}));
+	EXPECT_EQ(4, cs.Enumerate(BF::FunctionRef<bool (const double&)>{}));
+
+	EXPECT_EQ(2, cs.Enumerate(Single<void (const double&)>::SF));
+	EXPECT_EQ(4, cs.Enumerate(Single<bool (const double&)>::SF));
+
+	EXPECT_EQ(2, cs.Enumerate(Single<void (const double&)>{}));
+	EXPECT_EQ(4, cs.Enumerate(Single<bool (const double&)>{}));
+
+	EXPECT_EQ(2, cs.Enumerate(Double<void (const double&)>::SF));
+	EXPECT_EQ(4, cs.Enumerate(Double<bool (const double&)>::SF));
+
+	EXPECT_EQ(2, cs.Enumerate(Double<void (const double&)>{}));
+	EXPECT_EQ(4, cs.Enumerate(Double<bool (const double&)>{}));
 }
 
 

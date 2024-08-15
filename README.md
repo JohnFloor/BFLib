@@ -40,6 +40,27 @@ int main() {
 
 The above wouldn't work with a standard function wrapper or view, because the 2<sup>nd</sup> call would be ambiguous.
 
+You can also have a non-`const` and `const` overload of the same `Enumerate()` method. Of course, they have to differ in the callable's signature too. Example:
+
+```c++
+template <class Type>
+struct MyContainer {
+    void Enumerate(BF::FunctionRef<void (Type&)> f);
+    void Enumerate(BF::FunctionRef<void (const Type&)> f) const;
+};
+
+int main() {
+    MyContainer<double> cont;
+
+    cont.Enumerate(BF::FunctionRef<void (double&)>{});          // calls 1st candidate
+    cont.Enumerate(BF::FunctionRef<void (const double&)>{});    // calls 2nd candidate
+
+    cont.Enumerate([] (double&) {});                            // calls 1st candidate
+    cont.Enumerate([] (const double&) {});                      // calls 2nd candidate
+}
+```
+
+The above wouldn't work with a standard function wrapper or view, because the 2<sup>nd</sup> call would be ambiguous, and the 4<sup>th</sup> would surprisingly call the 1<sup>st</sup> candidate.
 
 ### Const-correctness
 

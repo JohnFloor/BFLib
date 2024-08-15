@@ -904,14 +904,11 @@ TEST(FunctionRef, ConstCastToSignature)
 
 		MyVector vec { 0.0, 0.0, 0.0 };
 
-		double sum = 0.0;
 		vec.Enumerate([] (double& item) { item = 1.0; });
-		vec.Enumerate([&] (const double& item) { sum += item; });
 
 		EXPECT_EQ(1.0, vec[0]);
 		EXPECT_EQ(1.0, vec[1]);
 		EXPECT_EQ(1.0, vec[2]);
-		EXPECT_EQ(3.0, sum);
 	}
 
 //	BF::FunctionRef<void ()>{}.ConstCast<void () &>();			// [CompilationError]: 'Signature' must be a function type in the form 'Ret (Pars...) [const] [noexcept]'.

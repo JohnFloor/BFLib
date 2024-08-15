@@ -280,7 +280,7 @@ BF::FunctionRef<void () const> target2 = target;    // error: source is less con
 Calls the pointed callable.
 
 
-### `ConstCast()` method, with no template arguments <a id="ConstCast-method"/>
+### `ConstCast()` method, with no template arguments<a id="ConstCast-method"/>
 
 Removes the `const` (but not the `volatile`) qualifier from a `const`-qualified `BF::FunctionRef`. It doesn't change the `Signature`. The method triggers a `static_assert`, if the cast is unnecessary. Example:
 
@@ -395,7 +395,7 @@ To compile it, C++23 features must be enabled.
 Tested on Visual Studio 2022 v17.10.1 with `/std:c++latest`.
 
 
-## Standard function wrappers and views <a id="std-wrappers"/>
+## Standard function wrappers and views<a id="std-wrappers"/>
 
 | Type             | Name                      | Link to cppreference.com | Essay/proposal |
 | ---------------- | ------------------------- | ------------------------ | -------------- |

@@ -38,7 +38,7 @@ int main() {
 }
 ```
 
-The above wouldn't work with a standard function wrapper, because the 2<sup>nd</sup> call would be ambiguous.
+The above wouldn't work with a standard function wrapper or view, because the 2<sup>nd</sup> call would be ambiguous.
 
 
 ### Const-correctness

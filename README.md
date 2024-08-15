@@ -23,18 +23,18 @@ BF::FunctionRef<void (int)> g1 = &Foo1;         // OK
 BF::FunctionRef<void (int)> g2 = &Foo2;         // error: different signatures
 ```
 
-This makes `BF::FunctionRef` suitable for overloading on convertible callback signatures. As an example, you can make a `Tree` class with two `Enumerate()` methods differing only in the callback's return type.
+This makes `BF::FunctionRef` suitable for overloading on convertible callback signatures. As an example, you can make a container class with two `Enumerate()` methods differing only in the callback's return type.
 
 ```c++
-struct Tree {
+struct MyContainer {
     void Enumerate(BF::FunctionRef<void ()>);   // enumerate all items unconditionally
     void Enumerate(BF::FunctionRef<bool ()>);   // stop enumeration, if client returns false
 };
 
 int main() {
-    Tree t;
-    t.Enumerate([] {});                         // calls 1st candidate
-    t.Enumerate([] { return false; });          // calls 2nd candidate
+    MyContainer cont;
+    cont.Enumerate([] {});                      // calls 1st candidate
+    cont.Enumerate([] { return false; });       // calls 2nd candidate
 }
 ```
 

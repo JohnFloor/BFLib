@@ -305,6 +305,22 @@ BF::FunctionRef<volatile int&& (int*&, int const* const&)> f3;
 f3.ConstCast<const volatile int&& (int const* const&, int*&)>();        // OK
 ```
 
+A typical usage of `ConstCast<ToSignature>()` is when you implement a pair of methods (non-`const` and `const`), and call one from the other. Example:
+
+```c++
+template <class Type>
+struct MyContainer {
+    void Enumerate(BF::FunctionRef<void (Type&)> f) {
+        Enumerate(f.ConstCast<void (const Type&)>());
+    }
+
+    void Enumerate(BF::FunctionRef<void (const Type&)> f) const {
+        for (const Type& item : *this)
+            f(item);
+    }
+};
+```
+
 The *cv* qualifiers and the value category of `BF::FunctionRef` is preserved. Example:
 
 ```c++

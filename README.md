@@ -228,7 +228,7 @@ The following properties are checked by `static_assert`'s:
   {
       S s;
       BF::FunctionRef<void () const> f = s;   // static_assert: cannot initialize 'f' with 's'
-      const_cast<const S&>(s)();              // "as if you would add const" - also ill-formed
+      std::as_const(s)();                     // "as if you would add const" - also ill-formed
   }
   ```
 

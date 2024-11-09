@@ -113,6 +113,10 @@ The `const` and `noexcept` in `Signature` is forwarded to `BF::FunctionRef::oper
 - `Signature` contains `const` <=> `BF::FunctionRef::operator()` is `const`.
 - `Signature` contains `noexcept` <=> `BF::FunctionRef::operator()` is `noexcept`.
 
+**Definition**. Let `FWrap` be a function wrapper/view, and `f` an expression denoting a (possibly overloaded) function or a function object. We say, that *`FWrap` accepts `f` on its public interface*, if `FWrap`'s ctor. and `operator=` can be chosen unambiguously by overload resolution, when `FWrap` is initialized/assigned from `f`. This means that the parameter types of the ctor. and `operator=` accept the type and value category of `f`, and the type constraints (if any) are also satisfied. (We assume, that `FWrap`'s ctors. have the same parameter types and constraints as its `operator=`'s.)
+
+Note, that further constraints can be checked after overload resolution chose the ctor./`operator=`. These can be checked in the implementation of the chosen function in `static_assert`'s. To make `BF::FunctionRef` easy to use, it is crucial to choose wisely what to check on the public interface, and what in the implementation.
+
 
 ### Initializing from a function
 

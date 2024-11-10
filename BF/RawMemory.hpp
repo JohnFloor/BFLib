@@ -14,6 +14,10 @@ namespace BF {
 
 union GenPtr {
 public:
+	void operator=(BadSelector) noexcept {
+		mObjPtr = (void*)BadValuePtr;
+	}
+
 	template <class Type>						// 'Type' must be non-&.
 	void operator=(Type* newPtr) noexcept {
 		if constexpr (std::is_function_v<Type>)
@@ -39,14 +43,6 @@ private:
 	void (*mFunPtr)();
 	void*  mObjPtr;
 };
-
-
-// === Bad values ======================================================================================================
-
-constexpr UInt16  BadValue16  = 0xBAAD;
-constexpr UInt32  BadValue32  = 0xBAADBAAD;
-constexpr UInt64  BadValue64  = 0xBAADBAADBAADBAAD;
-constexpr UIntPtr BadValuePtr = static_cast<UIntPtr>(BadValue64);
 
 
 // === IsNullReference =================================================================================================

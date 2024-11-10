@@ -254,11 +254,23 @@ The called `operator()` will be always one, that returns `Ret` and has parameter
 
 ### Default constructor
 
+Same as [constructing from `BF::Bad`](#constructor-from-bfbad).
+
+
+### Constructor from `BF::Bad`
+
 Constructs an invalid `BF::FunctionRef`. Calling its `operator()` will abort the program. The intended usage is, that the user assigns a callable to it before calling `operator()`.
 
 Note, that the invalid state can be propagated by [copy/move semantics](#special-methods) and [copy from friend](#copy-from-friend).
 
 It is an invalid, and not an empty/null `BF::FunctionRef`. There is no optionality (empty or null state) implemented (although this could be done). `BF::FunctionRef` is therefore not constructible from `std::nullptr_t`, nor can it be compared with `nullptr`.
+
+
+### Constructor from `BF::Uninitialized`
+
+It's a no-op. Constructs an uninitialized `BF::FunctionRef`. Calling its `operator()` is undefined behavior. The intended usage is, that the user assigns a callable to it before calling `operator()`. Use this ctor. in performance critical places only, otherwise prefer [constructing from `BF::Bad`](#constructor-from-bfbad).
+
+Note, that the uninitialized state can be propagated by [copy/move semantics](#special-methods) and [copy from friend](#copy-from-friend).
 
 
 ### Constructing/assigning from functions and functors

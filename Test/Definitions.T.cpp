@@ -128,3 +128,30 @@ static_assert(BF_PASTE(1111111, 2222222) == 11111112222222);
 #define VALUE_1 1111111
 #define VALUE_2 2222222
 static_assert(BF_PASTE(VALUE_1, VALUE_2) == 11111112222222);
+
+
+// === Bad values ======================================================================================================
+
+static_assert(std::is_same_v<decltype(BF::BadValue16),  const UInt16>);
+static_assert(std::is_same_v<decltype(BF::BadValue32),  const UInt32>);
+static_assert(std::is_same_v<decltype(BF::BadValue64),  const UInt64>);
+static_assert(std::is_same_v<decltype(BF::BadValuePtr), const UIntPtr>);
+
+static_assert((BF::BadValue16 & 0xFF00) != 0x00 && (BF::BadValue16 & 0x00FF) != 0x00);
+static_assert(BF::BadValue32  == (UInt32(BF::BadValue16) << 16) + BF::BadValue16);
+static_assert(BF::BadValue64  == (UInt64(BF::BadValue32) << 32) + BF::BadValue32);
+static_assert(BF::BadValuePtr == static_cast<UIntPtr>(BF::BadValue64));
+
+
+// === Bad =============================================================================================================
+
+static constexpr bool BadTest(BF::BadSelector) { return true; }
+static_assert(BadTest(BF::Bad));
+// static_assert(BadTest({}));							// [CompilationError]: cannot convert argument 1 from 'initializer list' to 'BF::BadSelector'
+
+
+// === Uninitialized ===================================================================================================
+
+static constexpr bool UninitializedTest(BF::UninitializedSelector) { return true; }
+static_assert(UninitializedTest(BF::Uninitialized));
+// static_assert(UninitializedTest({}));				// [CompilationError]: cannot convert argument 1 from 'initializer list' to 'BF::UninitializedSelector'

@@ -72,3 +72,29 @@ constexpr UChar MaxUChar = UINT8_MAX;
 
 #define IMP_BF_PASTE(token1, token2)	token1 ## token2
 #define BF_PASTE(token1, token2)		IMP_BF_PASTE(token1, token2)
+
+
+// === Bad values ======================================================================================================
+
+namespace BF {
+	constexpr UInt16  BadValue16  = 0xBAAD;
+	constexpr UInt32  BadValue32  = 0xBAADBAAD;
+	constexpr UInt64  BadValue64  = 0xBAADBAADBAADBAAD;
+	constexpr UIntPtr BadValuePtr = static_cast<UIntPtr>(BadValue64);
+}
+
+
+// === Bad =============================================================================================================
+
+namespace BF {
+	struct BadSelector final { explicit BadSelector() = default; };
+	constexpr BadSelector Bad;
+}
+
+
+// === Uninitialized ===================================================================================================
+
+namespace BF {
+	struct UninitializedSelector final { explicit UninitializedSelector() = default; };
+	constexpr UninitializedSelector Uninitialized;
+}

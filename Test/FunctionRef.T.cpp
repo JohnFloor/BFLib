@@ -451,22 +451,35 @@ TEST(FunctionRef, WontCallNotMatchingSignature)
 }
 
 
-TEST(FunctionRef, DefaultCtor)
+TEST(FunctionRef, CtorDefault)
 {
 	{ BF::FunctionRef<void ()>                f; }
 	{ BF::FunctionRef<void () const>          f; }
 	{ BF::FunctionRef<void () noexcept>       f; }
 	{ BF::FunctionRef<void () const noexcept> f; }
 
-	{ BF::FunctionRef<int ()>                 f; }
-	{ BF::FunctionRef<int () const>           f; }
-	{ BF::FunctionRef<int () noexcept>        f; }
-	{ BF::FunctionRef<int () const noexcept>  f; }
-
 //	{ BF::FunctionRef<void (...)>             f; }			// [CompilationError]: 'Signature' must be a function type in the form 'Ret (Pars...) [const] [noexcept]'.
 //	{ BF::FunctionRef<void () volatile>       f; }			// [CompilationError]: 'Signature' must be a function type in the form 'Ret (Pars...) [const] [noexcept]'.
 //	{ BF::FunctionRef<void () &>              f; }			// [CompilationError]: 'Signature' must be a function type in the form 'Ret (Pars...) [const] [noexcept]'.
 //	{ BF::FunctionRef<void () &&>             f; }			// [CompilationError]: 'Signature' must be a function type in the form 'Ret (Pars...) [const] [noexcept]'.
+}
+
+
+TEST(FunctionRef, CtorBad)
+{
+	{ BF::FunctionRef<void ()>                f = BF::Bad; }
+	{ BF::FunctionRef<void () const>          f = BF::Bad; }
+	{ BF::FunctionRef<void () noexcept>       f = BF::Bad; }
+	{ BF::FunctionRef<void () const noexcept> f = BF::Bad; }
+}
+
+
+TEST(FunctionRef, CtorUninitialized)
+{
+	{ BF::FunctionRef<void ()>                f = BF::Uninitialized; }
+	{ BF::FunctionRef<void () const>          f = BF::Uninitialized; }
+	{ BF::FunctionRef<void () noexcept>       f = BF::Uninitialized; }
+	{ BF::FunctionRef<void () const noexcept> f = BF::Uninitialized; }
 }
 
 

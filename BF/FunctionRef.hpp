@@ -16,10 +16,10 @@ namespace BF {
 
 namespace ImpFunctionRef {
 
-	// DefaultConstructedFunctionRefWasCalled
+	// BadFunctionRefWasCalled
 
 template <class Ret, class... Pars>
-BF_NOINLINE Ret DefaultConstructedFunctionRefWasCalled(BF::GenPtr, Pars...) noexcept
+BF_NOINLINE Ret BadFunctionRefWasCalled(BF::GenPtr, Pars...) noexcept
 {
 	std::abort();
 }
@@ -300,10 +300,15 @@ private:
 	}
 
 public:
-	[[gsl::suppress(type.6)]]	// 'Base::mGenPtr' is intentionally uninitialized
-	Base() {
-		mForwarder = &DefaultConstructedFunctionRefWasCalled<Ret, Pars...>;
+	Base() : Base(Bad) {}
+
+	Base(BadSelector) {
+		mGenPtr    = Bad;
+		mForwarder = &BadFunctionRefWasCalled<Ret, Pars...>;
 	}
+
+	[[gsl::suppress(type.6)]]						// member variables are intentionally uninitialized
+	Base(UninitializedSelector) {}
 
 	Base(std::nullptr_t) = delete;					// this reference is not nullable; '== nullptr' also cannot be checked
 

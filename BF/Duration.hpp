@@ -4,6 +4,7 @@
 #pragma once
 #include <cassert>
 #include <chrono>
+#include "BF/ClassUtils.hpp"
 #include "BF/Definitions.hpp"
 
 
@@ -35,7 +36,7 @@ double GetNothingDuration();
 
 // === class Timer =====================================================================================================
 
-class Timer {
+class Timer : ImmobileClass {
 public:
 	explicit Timer(double seconds) :
 		mSeconds(seconds),
@@ -43,11 +44,6 @@ public:
 	{
 		assert(seconds >= 0.0);
 	}
-
-	Timer(const Timer&) = delete;
-	Timer(Timer&&) = delete;
-	Timer& operator=(const Timer&) = delete;
-	Timer& operator=(Timer&&) = delete;
 
 	bool HasTime() const {
 		return HighResolutionClock::now() < mEndTime;

@@ -2,7 +2,9 @@
 
 
 #pragma once
-#include "BF/TypeTraits.hpp"
+#include <new>
+#include <type_traits>
+#include "BF/RawMemory.hpp"
 
 
 // === BF_COMPILE_TIME_TEST ============================================================================================
@@ -30,19 +32,6 @@ template <class Type>
 constexpr Type& LVal(Type&& value) noexcept
 {
 	return value;
-}
-
-
-// === SecureMemset ====================================================================================================
-// TODO-C23: Replace with memset_explicit().
-
-inline void SecureMemset(void* startAddress, UChar value, size_t size)
-{
-	UChar* begin = static_cast<UChar*>(startAddress);
-	UChar* end   = begin + size;
-
-	for (volatile UChar* c = begin; c != end; c++)
-		*c = value;
 }
 
 

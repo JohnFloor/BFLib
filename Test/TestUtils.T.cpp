@@ -1,7 +1,6 @@
 #include "BF/TestUtils.hpp"
 
 #include "gtest/gtest.h"
-#include "BF/Duration.hpp"
 
 
 // === BF_COMPILE_TIME_TEST ============================================================================================
@@ -76,29 +75,6 @@ BF_COMPILE_TIME_TEST()
 	TestLVal<const int>();
 	TestLVal<volatile int>();
 	TestLVal<const volatile int>();
-}
-
-
-// === SecureMemset ====================================================================================================
-
-TEST(TestUtils, SecureMemset)
-{
-	char oneChar = 123;
-	BF::SecureMemset(&oneChar, 124, 0);
-	EXPECT_EQ(123, oneChar);
-
-	char buffer[4] = {};
-	BF::SecureMemset(buffer, 0xC5, sizeof(buffer));
-	for (const UChar c : buffer)
-		EXPECT_EQ(0xC5, c);
-
-	const double duration = BF::MeasureDuration([] {
-		char buffer[1024];
-		for (size_t i = 0; i < MaxInt16 / 2; i++)
-			BF::SecureMemset(buffer, 0, sizeof(buffer));
-	});
-
-	EXPECT_TRUE(duration / BF::GetNothingDuration() > 100);
 }
 
 

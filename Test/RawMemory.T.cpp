@@ -1,6 +1,7 @@
 #include "BF/RawMemory.hpp"
 
 #include "gtest/gtest.h"
+#include "BF/Duration.hpp"
 #include "BF/TestUtils.hpp"
 
 
@@ -102,4 +103,27 @@ TEST(RawMemory, IsNullReference)
 	EXPECT_FALSE(BF::IsNullReference(123));
 
 	static_assert(noexcept(BF::IsNullReference(0)));
+}
+
+
+// === SecureMemset ====================================================================================================
+
+TEST(RawMemory, SecureMemset)
+{
+	char oneChar = 123;
+	BF::SecureMemset(&oneChar, 124, 0);
+	EXPECT_EQ(123, oneChar);
+
+	char buffer[4] = {};
+	BF::SecureMemset(buffer, 0xC5, sizeof(buffer));
+	for (const UChar c : buffer)
+		EXPECT_EQ(0xC5, c);
+
+	const double duration = BF::MeasureDuration([] {
+		char buffer[1024];
+		for (size_t i = 0; i < MaxInt16 / 2; i++)
+			BF::SecureMemset(buffer, 0, sizeof(buffer));
+	});
+
+	EXPECT_TRUE(duration / BF::GetNothingDuration() > 100);
 }

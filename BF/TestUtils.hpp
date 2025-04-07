@@ -4,6 +4,7 @@
 #pragma once
 #include <new>
 #include <type_traits>
+#include "BF/ClassUtils.hpp"
 #include "BF/RawMemory.hpp"
 
 
@@ -33,32 +34,6 @@ constexpr Type& LVal(Type&& value) noexcept
 {
 	return value;
 }
-
-
-// === MoveOnlyClass ===================================================================================================
-
-struct MoveOnlyClass {
-	MoveOnlyClass() = default;
-
-	MoveOnlyClass(const MoveOnlyClass&) = delete;
-	MoveOnlyClass(MoveOnlyClass&&) = default;
-
-	MoveOnlyClass& operator=(const MoveOnlyClass&) = delete;
-	MoveOnlyClass& operator=(MoveOnlyClass&&) = default;
-};
-
-
-// === ImmobileClass ===================================================================================================
-
-struct ImmobileClass {
-	ImmobileClass() = default;
-
-	ImmobileClass(const ImmobileClass&) = delete;
-	ImmobileClass(ImmobileClass&&) = delete;
-
-	ImmobileClass& operator=(const ImmobileClass&) = delete;
-	ImmobileClass& operator=(ImmobileClass&&) = delete;
-};
 
 
 // === PoisonedAddrOpClass =============================================================================================

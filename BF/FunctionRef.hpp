@@ -19,7 +19,7 @@ namespace ImpFunctionRef {
 	// BadFunctionRefWasCalled
 
 template <class Ret, class... Pars>
-BF_NOINLINE Ret BadFunctionRefWasCalled(BF::GenPtr, Pars...) noexcept
+BF_NOINLINE Ret BadFunctionRefWasCalled(GenPtr, Pars...) noexcept
 {
 	std::abort();
 }

@@ -75,19 +75,19 @@ concept HasAnyFunctionCallOperator = HasAnyFunctionCallOperatorT<Type, Ret, Pars
 
 struct CallTester {
 	void X();
-	void C() const;
-	void V() volatile;
+	void C()  const;
+	void V()  volatile;
 	void CV() const volatile;
 
-	void R() &;
-	void CR() const &;
-	void VR() volatile &;
-	void CVR() const volatile &;
+	void R()   &;
+	void CR()  const&;
+	void VR()  volatile&;
+	void CVR() const volatile&;
 
-	void RR() &&;
-	void CRR() const &&;
-	void VRR() volatile &&;
-	void CVRR() const volatile &&;
+	void RR()   &&;
+	void CRR()  const&&;
+	void VRR()  volatile&&;
+	void CVRR() const volatile&&;
 };
 
 template <class Type>

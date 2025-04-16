@@ -53,16 +53,11 @@ static void TestLVal()
 {
 	Type x{};
 
-	// TODO-CompilerBug: Currently you cannot put these directly into the static_assert. (Visual Studio v17.10.1, cl.exe 19.40.33811)
-	static constexpr bool B1 = std::is_same_v<decltype(BF::LVal(x)),            Type&>;
-	static constexpr bool B2 = std::is_same_v<decltype(BF::LVal(std::move(x))), Type&>;
-	static_assert(B1);
-	static_assert(B2);
+	static_assert(std::is_same_v<decltype(BF::LVal(x)),            Type&>);
+	static_assert(std::is_same_v<decltype(BF::LVal(std::move(x))), Type&>);
 
-	static constexpr bool B3 = &BF::LVal(x)            == &x;
-	static constexpr bool B4 = &BF::LVal(std::move(x)) == &x;
-	static_assert(B3);
-	static_assert(B4);
+	static_assert(&BF::LVal(x)            == &x);
+	static_assert(&BF::LVal(std::move(x)) == &x);
 
 	static_assert(noexcept(BF::LVal(x)));
 	static_assert(noexcept(BF::LVal(std::move(x))));

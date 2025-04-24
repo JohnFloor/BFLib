@@ -73,7 +73,7 @@ Const-correctness of standard function wrappers and views:
 - The function wrappers `std::move_only_function` and `std::copyable_function` are const-correct. Their template parameter supports signatures of the form `Ret (Pars...)` `const`<sub>op</sub> `(&|&&)`<sub>op</sub> `noexcept`<sub>op</sub> and they forward all qualifiers/specifiers to `operator()`.
 - Whether the function view `std::function_ref` is const-correct, is arguable. Its template parameter supports signatures of the form `Ret (Pars...)` `const`<sub>op</sub> `noexcept`<sub>op</sub>. It forwards the `noexcept` specifier, but not the `const` qualifier, to its `operator()`, which in turn is always `const`. This means, calling the `operator()` of a `const std::function_ref` can alter program state. This, however, seems to be intentional. It mimics the way an `int*` works. In C++ an `int*` member variable in a `const` object is `int* const` and not `const int* const`.
 
-`BF::FunctionRef` chose to forward the `const` qualifier from the template parameter to `operator()`. We think, if `BF::FunctionRef<void ()> f` is a member variable of a `const` object, in 99.9% of the cases the programmer's intention is, that `f()` should not modify the pointee. In the remaining 0.1% one can still apply a `const_cast`. See the [`ConstCast` method](#constcast-method).
+`BF::FunctionRef` chose to forward the `const` qualifier from the template parameter to `operator()`. The author thinks, if `BF::FunctionRef<void ()> f` is a member variable of a `const` object, in 99.9% of the cases the programmer's intention is, that `f()` should not modify the pointee. In the remaining 0.1% one can still apply a `const_cast`. See the [`ConstCast` method](#constcast-method).
 
 The inevitable corollary of const-correct function wrappers and views is that they usually cannot be `const` `&` in function parameters. Consider:
 
@@ -107,7 +107,7 @@ There are also `static_assert`'s in the form `"ILE: ..."` (Internal Library Erro
 
 ## Initialization
 
-`BF::FunctionRef`'s template parameter&mdash;the `Signature`&mdash;should be in the form `Ret(Pars...)` `const`<sub>op</sub> `noexcept`<sub>op</sub>.
+`BF::FunctionRef`'s template parameter&mdash;the `Signature`&mdash;should be in the form `Ret (Pars...)` `const`<sub>op</sub> `noexcept`<sub>op</sub>.
 
 The `const` and `noexcept` in `Signature` is forwarded to `BF::FunctionRef::operator()`:
 - `Signature` contains `const` <=> `BF::FunctionRef::operator()` is `const`.
@@ -152,7 +152,7 @@ The following properties are checked by `static_assert`'s:
   BF::FunctionRef<void () noexcept> f = &Foo; // static_assert: 'Foo' is not 'noexcept'
   ```
 
-Unlike in case of standard function wrappers, the initializer of `BF::FunctionRef` can be the name of an overloaded function too. In this case one of the candidates has to satisfy the above conditions. Example:
+Unlike in case of standard function wrappers, the initializer of `BF::FunctionRef` can be the name of an overloaded function too. In this case one of the candidates has to satisfy the above conditions, i.e. it has to return `Ret` and has to have parameters `Pars...`, and it has to satisfy the `noexcept` check. Example:
 
 ```c++
 void Foo();
@@ -284,11 +284,14 @@ This works as described in [Initialization](#initialization).
 
 ```c++
 void Foo();
+BF::FunctionRef<void ()>       source  = &Foo;
+BF::FunctionRef<void () const> sourceC = &Foo;
 
-BF::FunctionRef<void () const> source  = &Foo;
-BF::FunctionRef<void ()>       target  = source;    // OK, refers to 'Foo'
-BF::FunctionRef<void () const> target2 = target;    // error: source is less constrained
+BF::FunctionRef<void ()>       target  = sourceC;   // OK, refers to 'Foo'
+BF::FunctionRef<void () const> targetC = source;    // error: source is less constrained
 ```
+
+The target `BF::FunctionRef` will not refer to the source `BF::FunctionRef`. Rather it will refer to the callable referred by the source.
 
 
 ### `operator()` method
@@ -408,7 +411,7 @@ The implementation is [freestanding](https://timsong-cpp.github.io/cppwp/n4950/i
 
 To compile it, C++23 features must be enabled.
 
-Tested on Visual Studio 2022 v17.13.5 with `/std:c++latest`.
+Tested on Visual Studio 2022 v17.13.6 with `/std:c++latest`.
 
 
 ## Standard function wrappers and views<a id="std-wrappers"/>

@@ -291,7 +291,7 @@ BF::FunctionRef<void ()>       target  = sourceC;   // OK, refers to 'Foo'
 BF::FunctionRef<void () const> targetC = source;    // error: source is less constrained
 ```
 
-The target `BF::FunctionRef` will not refer to the source `BF::FunctionRef`. Rather it will refer to the callable referred by the source.
+The target `BF::FunctionRef` will not refer to the source `BF::FunctionRef`, rather it will directly refer to the callable referred by the source.
 
 
 ### `operator()` method

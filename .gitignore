@@ -7,10 +7,10 @@
 !/BF/**/*.cpp
 !/BF/**/*.hpp
 
-!/Test/**/*.asm
-!/Test/**/*.c
-!/Test/**/*.h
-!/Test/**/*.cpp
-!/Test/**/*.hpp
+!/BFTest/**/*.asm
+!/BFTest/**/*.c
+!/BFTest/**/*.h
+!/BFTest/**/*.cpp
+!/BFTest/**/*.hpp
 
 F???k???z/

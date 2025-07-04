@@ -47,3 +47,9 @@ BF_COMPILE_TIME_TEST()
 //	BF_ASSERT(true)					// [CompilationError]: missing ';' before '}'
 //	BF_BREAK()						// [CompilationError]: missing ';' before '}'
 }
+
+
+static constexpr void ConstexprTest()
+{
+	BF_ASSERT(true);
+}

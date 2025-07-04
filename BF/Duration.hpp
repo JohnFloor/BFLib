@@ -2,8 +2,8 @@
 
 
 #pragma once
-#include <cassert>
 #include <chrono>
+#include "BF/Assert.hpp"
 #include "BF/ClassUtils.hpp"
 #include "BF/Definitions.hpp"
 
@@ -42,7 +42,7 @@ public:
 		mSeconds(seconds),
 		mEndTime(HighResolutionClock::now() + std::chrono::nanoseconds(Int64(seconds * 1e9)))
 	{
-		assert(seconds >= 0.0);
+		BF_ASSERT(seconds >= 0.0);
 	}
 
 	bool HasTime() const {

@@ -1,8 +1,7 @@
 #include "BF/FunctionRef.hpp"
 
-#include <cassert>
-#include <cstring>
 #include <functional>
+#include <vector>
 #include "gtest/gtest.h"
 #include "BF/TestUtils.hpp"
 

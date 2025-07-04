@@ -2,9 +2,9 @@
 
 
 #pragma once
-#include <cassert>
 #include <cstdlib>
 #include <memory>
+#include "BF/Assert.hpp"
 #include "BF/RawMemory.hpp"
 #include "BF/TypeTraits.hpp"
 
@@ -264,7 +264,7 @@ private:
 
 	template <class Function>
 	void SetFromFunction(Function* functionPtr) {
-		assert(functionPtr != nullptr);
+		BF_ASSERT(functionPtr != nullptr);
 
 		mGenPtr    = functionPtr;
 		mForwarder = &FunctionForwarder<Function>;
@@ -272,7 +272,7 @@ private:
 
 	template <class Functor>
 	void SetFromFunctor(Functor&& functor) {
-		assert(!IsNullReference(functor));
+		BF_ASSERT(!IsNullReference(functor));
 
 		if constexpr (requires { CopyFriend(functor); }) {		// if std::decay_t<Functor> is a Base<*, *, Ret, Pars...>
 			CopyFriend(functor);

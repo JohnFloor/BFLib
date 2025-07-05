@@ -1,5 +1,6 @@
 #include "BF/TypeTraits.hpp"
 
+#include <cstddef>
 #include <vector>
 #include "BF/TestUtils.hpp"
 
@@ -41,6 +42,125 @@ BF_COMPILE_TIME_TEST()
 {
 	std::vector<BigNum> vec;
 	Push(vec, 100);
+}
+
+
+// === Integer =========================================================================================================
+// === SInteger ========================================================================================================
+// === UInteger ========================================================================================================
+
+namespace {
+	struct IntegerSubsumptionChecker {
+		static constexpr int Fun(auto)              { return 404; }
+		static constexpr int Fun(BF::Integer  auto) { return 200; }
+		static constexpr int Fun(BF::SInteger auto) { return  11; }
+		static constexpr int Fun(BF::UInteger auto) { return  22; }
+	};
+
+	template <BF::Integer  Type> struct IntegerChecker  {};
+	template <BF::SInteger Type> struct SIntegerChecker {};
+	template <BF::UInteger Type> struct UIntegerChecker {};
+}
+
+
+template <class Type, bool ExpectedResult>
+static void TestInteger()
+{
+	static_assert(BF::IsInteger<Type>                         == ExpectedResult);
+	static_assert(requires { typename IntegerChecker<Type>; } == ExpectedResult);
+}
+
+
+template <class Type, bool ExpectedResult>
+static void TestSInteger()
+{
+	static_assert(BF::IsSInteger<Type>                         == ExpectedResult);
+	static_assert(requires { typename SIntegerChecker<Type>; } == ExpectedResult);
+}
+
+
+template <class Type, bool ExpectedResult>
+static void TestUInteger()
+{
+	static_assert(BF::IsUInteger<Type>                         == ExpectedResult);
+	static_assert(requires { typename UIntegerChecker<Type>; } == ExpectedResult);
+}
+
+
+enum class Signedness {
+	Signed,		// Integer, SInteger
+	Unsigned,	// Integer, UInteger
+	None		// not Integer
+};
+
+
+template <class Type, Signedness S>
+static void TestSUN()
+{
+	TestInteger<Type,                S != Signedness::None>();
+	TestInteger<const Type,          S != Signedness::None>();
+	TestInteger<volatile Type,       S != Signedness::None>();
+	TestInteger<const volatile Type, S != Signedness::None>();
+
+	TestSInteger<Type,                S == Signedness::Signed>();
+	TestSInteger<const Type,          S == Signedness::Signed>();
+	TestSInteger<volatile Type,       S == Signedness::Signed>();
+	TestSInteger<const volatile Type, S == Signedness::Signed>();
+
+	TestUInteger<Type,                S == Signedness::Unsigned>();
+	TestUInteger<const Type,          S == Signedness::Unsigned>();
+	TestUInteger<volatile Type,       S == Signedness::Unsigned>();
+	TestUInteger<const volatile Type, S == Signedness::Unsigned>();
+}
+
+
+BF_COMPILE_TIME_TEST()
+{
+	static_assert(IntegerSubsumptionChecker::Fun("")    == 404);
+	static_assert(IntegerSubsumptionChecker::Fun(false) == 404);
+	static_assert(IntegerSubsumptionChecker::Fun(0)     ==  11);
+	static_assert(IntegerSubsumptionChecker::Fun(0u)    ==  22);
+}
+
+
+BF_COMPILE_TIME_TEST()
+{
+	TestSUN<char,               Signedness::Signed>();
+	TestSUN<signed char,        Signedness::Signed>();
+	TestSUN<unsigned char,      Signedness::Unsigned>();
+	TestSUN<char8_t,            Signedness::Unsigned>();
+	TestSUN<char16_t,           Signedness::Unsigned>();
+	TestSUN<char32_t,           Signedness::Unsigned>();
+	TestSUN<wchar_t,            Signedness::Unsigned>();
+
+	TestSUN<short,              Signedness::Signed>();
+	TestSUN<int,                Signedness::Signed>();
+	TestSUN<long,               Signedness::Signed>();
+	TestSUN<long long,          Signedness::Signed>();
+
+	TestSUN<signed short,       Signedness::Signed>();
+	TestSUN<signed int,         Signedness::Signed>();
+	TestSUN<signed long,        Signedness::Signed>();
+	TestSUN<signed long long,   Signedness::Signed>();
+
+	TestSUN<unsigned short,     Signedness::Unsigned>();
+	TestSUN<unsigned int,       Signedness::Unsigned>();
+	TestSUN<unsigned long,      Signedness::Unsigned>();
+	TestSUN<unsigned long long, Signedness::Unsigned>();
+
+	enum E1 {};
+	enum class E2 {};
+	enum class E3 : int {};
+
+	TestSUN<bool,               Signedness::None>();
+	TestSUN<int*,               Signedness::None>();
+	TestSUN<int&,               Signedness::None>();
+	TestSUN<int&&,              Signedness::None>();
+	TestSUN<std::byte,          Signedness::None>();
+	TestSUN<std::nullptr_t,     Signedness::None>();
+	TestSUN<E1,                 Signedness::None>();
+	TestSUN<E2,                 Signedness::None>();
+	TestSUN<E3,                 Signedness::None>();
 }
 
 

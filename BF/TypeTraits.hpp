@@ -26,6 +26,42 @@ template <class T>
 using			DontDeduce = std::type_identity_t<T>;
 
 
+// === Integer =========================================================================================================
+
+template <class T>
+struct			IsIntegerT : std::bool_constant<std::is_integral_v<T> && !std::is_same_v<std::remove_cv_t<T>, bool>> {};
+
+template <class T>
+constexpr bool	IsInteger = IsIntegerT<T>::value;
+
+template <class T>
+concept			Integer = IsIntegerT<T>::value;
+
+
+// === SInteger ========================================================================================================
+
+template <class T>
+struct			IsSIntegerT : std::bool_constant<Integer<T> && std::is_signed_v<T>> {};
+
+template <class T>
+constexpr bool	IsSInteger = Integer<T> && std::is_signed_v<T>;
+
+template <class T>
+concept			SInteger = Integer<T> && std::is_signed_v<T>;
+
+
+// === UInteger ========================================================================================================
+
+template <class T>
+struct			IsUIntegerT : std::bool_constant<Integer<T> && std::is_unsigned_v<T>> {};
+
+template <class T>
+constexpr bool	IsUInteger = Integer<T> && std::is_unsigned_v<T>;
+
+template <class T>
+concept			UInteger = Integer<T> && std::is_unsigned_v<T>;
+
+
 // === Decayed =========================================================================================================
 
 template <class T>

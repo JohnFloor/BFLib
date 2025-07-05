@@ -283,6 +283,16 @@ TEST(StdFunctionDemo, OverloadingOnCallableSignature_ConstConvertible)
 ////// Test cases //////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+TEST(FunctionRef, Inheritance)
+{
+//	class C1 : BF::FunctionRef<int ()> {};					// [CompilationError]: it has been declared as 'final'
+//	class C2 : BF::FunctionRef<int () const> {};			// [CompilationError]: it has been declared as 'final'
+//	class C3 : BF::FunctionRef<int () noexcept> {};			// [CompilationError]: it has been declared as 'final'
+//	class C4 : BF::FunctionRef<int () const noexcept> {};	// [CompilationError]: it has been declared as 'final'
+}
+
+
 TEST(FunctionRef, FromOverloaded)
 {
 	using Doub = Double<int (), int (bool)>;

@@ -13,4 +13,6 @@
 !/BFTest/**/*.cpp
 !/BFTest/**/*.hpp
 
+!/BFDocumentation/**
+
 F???k???z/

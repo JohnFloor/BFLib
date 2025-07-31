@@ -10,7 +10,7 @@
 
 // === BF_DUMMY_NAME, BF_DUMMY =========================================================================================
 
-#define BF_DUMMY_NAME			BF_PASTE(BF_dummy_line_, __LINE__)
+#define BF_DUMMY_NAME			BF_PASTE(zzzz0z00z0zz0z_, __LINE__)
 #define BF_DUMMY				BF_DUMMY_NAME [[maybe_unused]]
 
 

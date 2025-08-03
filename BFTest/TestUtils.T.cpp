@@ -85,6 +85,31 @@ BF_COMPILE_TIME_TEST()
 }
 
 
+// === Move() ==========================================================================================================
+
+constexpr int BF_DUMMY = BF::Move(0);
+static_assert(noexcept(BF::Move(0)));
+
+
+BF_COMPILE_TIME_TEST()
+{
+	int                i   = 0;
+	const int          ci  = 0;
+	volatile int       vi  = 0;
+	const volatile int cvi = 0;
+
+	static_assert(std::is_same_v<decltype(BF::Move(i)),              decltype(std::move(i))>);
+	static_assert(std::is_same_v<decltype(BF::Move(ci)),             decltype(std::move(ci))>);
+	static_assert(std::is_same_v<decltype(BF::Move(vi)),             decltype(std::move(vi))>);
+	static_assert(std::is_same_v<decltype(BF::Move(cvi)),            decltype(std::move(cvi))>);
+
+	static_assert(std::is_same_v<decltype(BF::Move(std::move(i))),   decltype(std::move(std::move(i)))>);
+	static_assert(std::is_same_v<decltype(BF::Move(std::move(ci))),  decltype(std::move(std::move(ci)))>);
+	static_assert(std::is_same_v<decltype(BF::Move(std::move(vi))),  decltype(std::move(std::move(vi)))>);
+	static_assert(std::is_same_v<decltype(BF::Move(std::move(cvi))), decltype(std::move(std::move(cvi)))>);
+}
+
+
 // === LVal() ==========================================================================================================
 
 template <class Type>

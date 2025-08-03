@@ -31,6 +31,14 @@ template <class Type>
 void AssertIsRValue(Type&&)	{ static_assert(!std::is_lvalue_reference_v<Type>, "This expression is not an rvalue."); }
 
 
+// === Move() ==========================================================================================================
+
+constexpr decltype(auto) Move(auto&& value) noexcept
+{
+	return std::move(value);
+}
+
+
 // === LVal() ==========================================================================================================
 
 template <class Type>

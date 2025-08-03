@@ -960,7 +960,7 @@ TEST(FunctionRef, ParameterPassing)
 
 	struct MoveCtorThrows {
 		MoveCtorThrows() = default;
-		[[gsl::suppress(f.6)]] MoveCtorThrows(MoveCtorThrows&&) {}
+		[[gsl::suppress("f.6")]] MoveCtorThrows(MoveCtorThrows&&) {}	// move ctor. intentionally throws
 	};
 
 	struct DtorThrows {

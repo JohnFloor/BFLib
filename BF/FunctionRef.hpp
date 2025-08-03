@@ -307,7 +307,7 @@ public:
 		mForwarder = &BadFunctionRefWasCalled<Ret, Pars...>;
 	}
 
-	[[gsl::suppress(type.6)]]						// member variables are intentionally uninitialized
+	[[gsl::suppress("type.6")]]						// member variables are intentionally uninitialized
 	Base(UninitializedSelector) {}
 
 	Base(std::nullptr_t) = delete;					// this reference is not nullable; '== nullptr' also cannot be checked

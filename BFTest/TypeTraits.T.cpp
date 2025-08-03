@@ -454,25 +454,24 @@ struct Derived : Base {};
 
 
 BF_COMPILE_TIME_TEST()
-[[gsl::suppress(es.56)]]		// allow std::move on constant variable
 {
-	{ Base          s; Base    t = s;            }		// without BF::NotSelf this calls the auto&& ctor.
-	{ Base          s; Base    t = std::move(s); }		// exactly matches the move ctor.
-	{ const Base    s; Base    t = s;            }		// exactly matches the copy ctor.
-	{ const Base    s; Base    t = std::move(s); }		// without BF::NotSelf this calls the auto&& ctor.
-	{ Derived       s; Base    t = s;            }		// without BF::NotSelf this calls the auto&& ctor.
-	{ Derived       s; Base    t = std::move(s); }		// without BF::NotSelf this calls the auto&& ctor.
-	{ const Derived s; Base    t = s;            }		// without BF::NotSelf this calls the auto&& ctor.
-	{ const Derived s; Base    t = std::move(s); }		// without BF::NotSelf this calls the auto&& ctor.
+	{ Base          s; Base    t = s;           }		// without BF::NotSelf this calls the auto&& ctor.
+	{ Base          s; Base    t = BF::Move(s); }		// exactly matches the move ctor.
+	{ const Base    s; Base    t = s;           }		// exactly matches the copy ctor.
+	{ const Base    s; Base    t = BF::Move(s); }		// without BF::NotSelf this calls the auto&& ctor.
+	{ Derived       s; Base    t = s;           }		// without BF::NotSelf this calls the auto&& ctor.
+	{ Derived       s; Base    t = BF::Move(s); }		// without BF::NotSelf this calls the auto&& ctor.
+	{ const Derived s; Base    t = s;           }		// without BF::NotSelf this calls the auto&& ctor.
+	{ const Derived s; Base    t = BF::Move(s); }		// without BF::NotSelf this calls the auto&& ctor.
 
-	{ Base          s; Base t; t = s;            }		// without BF::NotSelf this calls the auto&& assignment
-	{ Base          s; Base t; t = std::move(s); }		// exactly matches the move assignment
-	{ const Base    s; Base t; t = s;            }		// exactly matches the copy assignment
-	{ const Base    s; Base t; t = std::move(s); }		// without BF::NotSelf this calls the auto&& assignment
-	{ Derived       s; Base t; t = s;            }		// without BF::NotSelf this calls the auto&& assignment
-	{ Derived       s; Base t; t = std::move(s); }		// without BF::NotSelf this calls the auto&& assignment
-	{ const Derived s; Base t; t = s;            }		// without BF::NotSelf this calls the auto&& assignment
-	{ const Derived s; Base t; t = std::move(s); }		// without BF::NotSelf this calls the auto&& assignment
+	{ Base          s; Base t; t = s;           }		// without BF::NotSelf this calls the auto&& assignment
+	{ Base          s; Base t; t = BF::Move(s); }		// exactly matches the move assignment
+	{ const Base    s; Base t; t = s;           }		// exactly matches the copy assignment
+	{ const Base    s; Base t; t = BF::Move(s); }		// without BF::NotSelf this calls the auto&& assignment
+	{ Derived       s; Base t; t = s;           }		// without BF::NotSelf this calls the auto&& assignment
+	{ Derived       s; Base t; t = BF::Move(s); }		// without BF::NotSelf this calls the auto&& assignment
+	{ const Derived s; Base t; t = s;           }		// without BF::NotSelf this calls the auto&& assignment
+	{ const Derived s; Base t; t = BF::Move(s); }		// without BF::NotSelf this calls the auto&& assignment
 }
 
 

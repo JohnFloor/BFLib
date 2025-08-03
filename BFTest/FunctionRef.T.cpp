@@ -1048,7 +1048,6 @@ TEST(FunctionRef, ConstCast)
 
 TEST(FunctionRef, ConstCastToSignature)
 {
-	[[gsl::suppress(es.56)]]        // allow std::move on constant variable
 	{
 		// Checking all combinations of the declaration.
 		// - volatile BF::FunctionRef is not usable. You can't call operator() on it.
@@ -1062,10 +1061,10 @@ TEST(FunctionRef, ConstCastToSignature)
 		std::same_as<volatile       BF::FunctionRef<int& ()>&>  decltype(auto) vf1  = vf.ConstCast<int& ()>();
 		std::same_as<const volatile BF::FunctionRef<int& ()>&>  decltype(auto) cvf1 = cvf.ConstCast<int& ()>();
 
-		std::same_as<               BF::FunctionRef<int& ()>&&> decltype(auto) f2   = std::move(f).ConstCast<int& ()>();
-		std::same_as<const          BF::FunctionRef<int& ()>&&> decltype(auto) cf2  = std::move(cf).ConstCast<int& ()>();
-		std::same_as<volatile       BF::FunctionRef<int& ()>&&> decltype(auto) vf2  = std::move(vf).ConstCast<int& ()>();
-		std::same_as<const volatile BF::FunctionRef<int& ()>&&> decltype(auto) cvf2 = std::move(cvf).ConstCast<int& ()>();
+		std::same_as<               BF::FunctionRef<int& ()>&&> decltype(auto) f2   = BF::Move(f).ConstCast<int& ()>();
+		std::same_as<const          BF::FunctionRef<int& ()>&&> decltype(auto) cf2  = BF::Move(cf).ConstCast<int& ()>();
+		std::same_as<volatile       BF::FunctionRef<int& ()>&&> decltype(auto) vf2  = BF::Move(vf).ConstCast<int& ()>();
+		std::same_as<const volatile BF::FunctionRef<int& ()>&&> decltype(auto) cvf2 = BF::Move(cvf).ConstCast<int& ()>();
 	}
 
 	{

@@ -18,16 +18,15 @@ namespace {
 // === Test cases ======================================================================================================
 
 BF_COMPILE_TIME_TEST()
-[[gsl::suppress(es.56)]]		// allow std::move on constant variable
 {
 	{ bool                b = true; BF_ASSERT(b); }
 	{ const bool          b = true; BF_ASSERT(b); }
 	{ volatile bool       b = true; BF_ASSERT(b); }
 	{ const volatile bool b = true; BF_ASSERT(b); }
-	{ bool                b = true; BF_ASSERT(std::move(b)); }
-	{ const bool          b = true; BF_ASSERT(std::move(b)); }
-	{ volatile bool       b = true; BF_ASSERT(std::move(b)); }
-	{ const volatile bool b = true; BF_ASSERT(std::move(b)); }
+	{ bool                b = true; BF_ASSERT(BF::Move(b)); }
+	{ const bool          b = true; BF_ASSERT(BF::Move(b)); }
+	{ volatile bool       b = true; BF_ASSERT(BF::Move(b)); }
+	{ const volatile bool b = true; BF_ASSERT(BF::Move(b)); }
 }
 
 

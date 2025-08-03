@@ -60,7 +60,6 @@ BF_COMPILE_TIME_TEST(int par1, int& par2, int&& par3)
 // === AssertIsLValue(), AssertIsRValue() ==============================================================================
 
 BF_COMPILE_TIME_TEST()
-[[gsl::suppress(es.56)]]		// allow std::move on constant variable
 {
 	int                i   = 0;
 	const int          ci  = 0;
@@ -75,10 +74,10 @@ BF_COMPILE_TIME_TEST()
 
 	BF::AssertIsRValue(0);
 	BF::AssertIsRValue(nullptr);
-	BF::AssertIsRValue(std::move(i));
-	BF::AssertIsRValue(std::move(ci));
-	BF::AssertIsRValue(std::move(vi));
-	BF::AssertIsRValue(std::move(cvi));
+	BF::AssertIsRValue(BF::Move(i));
+	BF::AssertIsRValue(BF::Move(ci));
+	BF::AssertIsRValue(BF::Move(vi));
+	BF::AssertIsRValue(BF::Move(cvi));
 
 	BF::AssertIsRValue(static_cast<int>(i));
 	BF::AssertIsRValue(static_cast<const int>(ci));

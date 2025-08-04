@@ -8,6 +8,7 @@
 namespace {
 
 
+namespace BF_DUMMY_NAME {}
 class BF_DUMMY_NAME {};
 enum  BF_DUMMY_NAME {};
 using BF_DUMMY_NAME = void;

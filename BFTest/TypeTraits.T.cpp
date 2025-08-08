@@ -579,7 +579,6 @@ static void TestCopyCVRef()
 	static_assert(std::is_same_v<BF::std29::copy_cvref_t<From,   To&&>, CVTo&&>);
 	static_assert(std::is_same_v<BF::std29::copy_cvref_t<From&,  To&&>, CVTo&>);
 	static_assert(std::is_same_v<BF::std29::copy_cvref_t<From&&, To&&>, CVTo&&>);
-
 }
 
 
@@ -604,4 +603,53 @@ BF_COMPILE_TIME_TEST()
 	TestCopyCVRef<const int,          const volatile char>();
 	TestCopyCVRef<volatile int,       const volatile char>();
 	TestCopyCVRef<const volatile int, const volatile char>();
+}
+
+
+// === std29::copy_cv_t ================================================================================================
+
+template <class From, class To>
+static void TestCopyCV()
+{
+	static_assert(!std::is_reference_v<From>);
+	static_assert(!std::is_reference_v<To>);
+
+	using CTo  = std::conditional_t<std::is_const_v<From>,    const To,     To>;
+	using CVTo = std::conditional_t<std::is_volatile_v<From>, volatile CTo, CTo>;
+
+	static_assert(std::is_same_v<BF::std29::copy_cv_t<From,   To>,   CVTo>);
+	static_assert(std::is_same_v<BF::std29::copy_cv_t<From&,  To>,   To>);
+	static_assert(std::is_same_v<BF::std29::copy_cv_t<From&&, To>,   To>);
+
+	static_assert(std::is_same_v<BF::std29::copy_cv_t<From,   To&>,  To&>);
+	static_assert(std::is_same_v<BF::std29::copy_cv_t<From&,  To&>,  To&>);
+	static_assert(std::is_same_v<BF::std29::copy_cv_t<From&&, To&>,  To&>);
+
+	static_assert(std::is_same_v<BF::std29::copy_cv_t<From,   To&&>, To&&>);
+	static_assert(std::is_same_v<BF::std29::copy_cv_t<From&,  To&&>, To&&>);
+	static_assert(std::is_same_v<BF::std29::copy_cv_t<From&&, To&&>, To&&>);
+}
+
+
+BF_COMPILE_TIME_TEST()
+{
+	TestCopyCV<int,                char>();
+	TestCopyCV<const int,          char>();
+	TestCopyCV<volatile int,       char>();
+	TestCopyCV<const volatile int, char>();
+
+	TestCopyCV<int,                const char>();
+	TestCopyCV<const int,          const char>();
+	TestCopyCV<volatile int,       const char>();
+	TestCopyCV<const volatile int, const char>();
+
+	TestCopyCV<int,                volatile char>();
+	TestCopyCV<const int,          volatile char>();
+	TestCopyCV<volatile int,       volatile char>();
+	TestCopyCV<const volatile int, volatile char>();
+
+	TestCopyCV<int,                const volatile char>();
+	TestCopyCV<const int,          const volatile char>();
+	TestCopyCV<volatile int,       const volatile char>();
+	TestCopyCV<const volatile int, const volatile char>();
 }

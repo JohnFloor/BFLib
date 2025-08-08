@@ -209,4 +209,19 @@ namespace std29 {
 }
 
 
+// === std29::copy_cv_t ================================================================================================
+// TODO-C++29: Replace with std::copy_cv.
+// Status: https://wg21.link/P1450/status.
+// Specification: https://wg21.link/P1450r3#page=8, in the first table.
+
+namespace std29 {
+	template <class From, class To>   struct copy_cv							: std::type_identity<To> {};
+	template <class From, class To>   struct copy_cv<const From, To>			: std::type_identity<const To> {};
+	template <class From, class To>   struct copy_cv<volatile From, To>			: std::type_identity<volatile To> {};
+	template <class From, class To>   struct copy_cv<const volatile From, To>	: std::type_identity<const volatile To> {};
+
+	template <class From, class To>   using copy_cv_t = copy_cv<From, To>::type;
+}
+
+
 }	// namespace BF

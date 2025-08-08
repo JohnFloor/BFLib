@@ -91,7 +91,7 @@ struct CallTester {
 };
 
 template <class Type>
-std26::copy_cvref_t<Type, CallTester>	AsCallTester();
+std29::copy_cvref_t<Type, CallTester>	AsCallTester();
 
 template <class Type, auto CallTesterMethod>
 concept IsCallable = requires { (AsCallTester<Type>().*CallTesterMethod)(); };
@@ -143,7 +143,7 @@ using ReplaceTemplateArgument = ReplaceTemplateArgumentT<ClassTemplateInstantiat
 	// ConstCastResult
 
 template <class Self, class ToSignature>
-using ConstCastResult = std26::copy_cvref_t<Self, ReplaceTemplateArgument<std::remove_cvref_t<Self>, ToSignature>>;
+using ConstCastResult = std29::copy_cvref_t<Self, ReplaceTemplateArgument<std::remove_cvref_t<Self>, ToSignature>>;
 
 	// SignatureFromType
 

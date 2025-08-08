@@ -557,7 +557,7 @@ BF_COMPILE_TIME_TEST()
 }
 
 
-// === std26::copy_cvref_t =============================================================================================
+// === std29::copy_cvref_t =============================================================================================
 
 template <class From, class To>
 static void TestCopyCVRef()
@@ -568,17 +568,17 @@ static void TestCopyCVRef()
 	using CTo  = std::conditional_t<std::is_const_v<From>,    const To,     To>;
 	using CVTo = std::conditional_t<std::is_volatile_v<From>, volatile CTo, CTo>;
 
-	static_assert(std::is_same_v<BF::std26::copy_cvref_t<From,   To>,   CVTo>);
-	static_assert(std::is_same_v<BF::std26::copy_cvref_t<From&,  To>,   CVTo&>);
-	static_assert(std::is_same_v<BF::std26::copy_cvref_t<From&&, To>,   CVTo&&>);
+	static_assert(std::is_same_v<BF::std29::copy_cvref_t<From,   To>,   CVTo>);
+	static_assert(std::is_same_v<BF::std29::copy_cvref_t<From&,  To>,   CVTo&>);
+	static_assert(std::is_same_v<BF::std29::copy_cvref_t<From&&, To>,   CVTo&&>);
 
-	static_assert(std::is_same_v<BF::std26::copy_cvref_t<From,   To&>,  CVTo&>);
-	static_assert(std::is_same_v<BF::std26::copy_cvref_t<From&,  To&>,  CVTo&>);
-	static_assert(std::is_same_v<BF::std26::copy_cvref_t<From&&, To&>,  CVTo&>);
+	static_assert(std::is_same_v<BF::std29::copy_cvref_t<From,   To&>,  CVTo&>);
+	static_assert(std::is_same_v<BF::std29::copy_cvref_t<From&,  To&>,  CVTo&>);
+	static_assert(std::is_same_v<BF::std29::copy_cvref_t<From&&, To&>,  CVTo&>);
 
-	static_assert(std::is_same_v<BF::std26::copy_cvref_t<From,   To&&>, CVTo&&>);
-	static_assert(std::is_same_v<BF::std26::copy_cvref_t<From&,  To&&>, CVTo&>);
-	static_assert(std::is_same_v<BF::std26::copy_cvref_t<From&&, To&&>, CVTo&&>);
+	static_assert(std::is_same_v<BF::std29::copy_cvref_t<From,   To&&>, CVTo&&>);
+	static_assert(std::is_same_v<BF::std29::copy_cvref_t<From&,  To&&>, CVTo&>);
+	static_assert(std::is_same_v<BF::std29::copy_cvref_t<From&&, To&&>, CVTo&&>);
 
 }
 

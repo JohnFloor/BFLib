@@ -186,12 +186,12 @@ template <class Type>	using RemoveVolatileBeforeRef	   = RemoveVolatileBeforeRef
 template <class Type>	using RemoveConstVolatileBeforeRef = RemoveConstVolatileBeforeRefT<Type>::type;
 
 
-// === std26::copy_cvref_t =============================================================================================
-// TODO-C++26: Replace with std::copy_cvref.
+// === std29::copy_cvref_t =============================================================================================
+// TODO-C++29: Replace with std::copy_cvref, if it is defined the same way as here.
 // Status: https://wg21.link/P1450/status.
 // Specification: https://wg21.link/P1450r0#page=11, in the last table. The definition was changed in r1 (which is probably a bug).
 
-namespace std26 {
+namespace std29 {
 	template <class From, class To>   struct copy_cvref								: std::type_identity<To> {};
 	template <class From, class To>   struct copy_cvref<const From, To>				: std::type_identity<AddConstBeforeRef<To>> {};
 	template <class From, class To>   struct copy_cvref<volatile From, To>			: std::type_identity<AddVolatileBeforeRef<To>> {};

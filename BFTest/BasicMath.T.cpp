@@ -1,6 +1,12 @@
 #include "BF/BasicMath.hpp"
 
 
+// === Precondition check ==============================================================================================
+
+static_assert(std::is_same_v<decltype(0ll),  Int64>);
+static_assert(std::is_same_v<decltype(0llu), UInt64>);
+
+
 // === IPow() ==========================================================================================================
 
 static_assert(BF::IPow( 0, 0) ==    1);

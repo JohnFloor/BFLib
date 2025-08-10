@@ -110,6 +110,19 @@ template <class T>
 concept			Decayed = IsDecayed<T>;
 
 
+// === DecayedOrArray ==================================================================================================
+
+template <class T>
+constexpr bool	IsDecayedOrArray = IsDecayed<std::remove_all_extents_t<T>> &&
+								   std::is_array_v<T> BF_IMPLIES std::is_bounded_array_v<T>;
+
+template <class T>
+struct			IsDecayedOrArrayT : std::bool_constant<IsDecayedOrArray<T>> {};
+
+template <class T>
+concept			DecayedOrArray = IsDecayedOrArray<T>;
+
+
 // === AreConstRelated =================================================================================================
 
 template <class T1, class T2>	struct AreConstRelatedT                                       : std::is_same<T1, T2> {};

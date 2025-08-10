@@ -212,6 +212,7 @@ BF_COMPILE_TIME_TEST()
 
 // === Referenceable ===================================================================================================
 // === Abominable ======================================================================================================
+// === Decayed =========================================================================================================
 
 template <class Type, bool ExpectedResult>
 static void TestReferenceable()
@@ -231,7 +232,16 @@ static void TestAbominable()
 }
 
 
-template <class Type, bool ExpectedReferenceable, bool ExpectedAbominable>
+template <class Type, bool ExpectedResult>
+static void TestDecayed()
+{
+	static_assert(BF::IsDecayed<Type>         == ExpectedResult);
+	static_assert(BF::IsDecayedT<Type>::value == ExpectedResult);
+	static_assert(BF::Decayed<Type>           == ExpectedResult);
+}
+
+
+template <class Type, bool ExpectedReferenceable, bool ExpectedAbominable, bool ExpectedDecayed>
 static void AssertAllCV()
 {
 	TestReferenceable<Type,                ExpectedReferenceable>();
@@ -243,11 +253,14 @@ static void AssertAllCV()
 	TestAbominable<const Type,          ExpectedAbominable>();
 	TestAbominable<volatile Type,       ExpectedAbominable>();
 	TestAbominable<const volatile Type, ExpectedAbominable>();
+
+	TestDecayed<Type, ExpectedDecayed>();
 }
 
 
 BF_COMPILE_TIME_TEST(BF::Referenceable auto) {}
 BF_COMPILE_TIME_TEST(BF::Abominable auto) {}
+BF_COMPILE_TIME_TEST(BF::Decayed auto) {}
 
 
 BF_COMPILE_TIME_TEST()
@@ -259,103 +272,72 @@ BF_COMPILE_TIME_TEST()
 	union U;
 	union UU {};
 
-	AssertAllCV<void,               false, false>();
-	AssertAllCV<std::nullptr_t,     true,  false>();
-	AssertAllCV<bool,               true,  false>();
-	AssertAllCV<int,                true,  false>();
-	AssertAllCV<double,             true,  false>();
-	AssertAllCV<char&,              true,  false>();
-	AssertAllCV<char&&,             true,  false>();
-	AssertAllCV<void*,              true,  false>();
-	AssertAllCV<const void*,        true,  false>();
-	AssertAllCV<int C::*,           true,  false>();
-	AssertAllCV<int C::**,          true,  false>();
-	AssertAllCV<int C::*&,          true,  false>();
-	AssertAllCV<int C::*&&,         true,  false>();
-	AssertAllCV<void (C::*)(),      true,  false>();
-	AssertAllCV<void (C::**)(),     true,  false>();
-	AssertAllCV<void (C::*&)(),     true,  false>();
-	AssertAllCV<void (C::*&&)(),    true,  false>();
-	AssertAllCV<void (C::*)() &,    true,  false>();
-	AssertAllCV<void (C::**)() &,   true,  false>();
-	AssertAllCV<void (C::*&)() &,   true,  false>();
-	AssertAllCV<void (C::*&&)() &,  true,  false>();
-	AssertAllCV<char[],             true,  false>();
-	AssertAllCV<char(*)[],          true,  false>();
-	AssertAllCV<char(&)[],          true,  false>();
-	AssertAllCV<char(&&)[],         true,  false>();
-	AssertAllCV<char[][44],         true,  false>();
-	AssertAllCV<char(*)[][44],      true,  false>();
-	AssertAllCV<char(&)[][44],      true,  false>();
-	AssertAllCV<char(&&)[][44],     true,  false>();
-	AssertAllCV<char[4],            true,  false>();
-	AssertAllCV<char(*)[4],         true,  false>();
-	AssertAllCV<char(&)[4],         true,  false>();
-	AssertAllCV<char(&&)[4],        true,  false>();
-	AssertAllCV<char[4][44],        true,  false>();
-	AssertAllCV<char(*)[4][44],     true,  false>();
-	AssertAllCV<char(&)[4][44],     true,  false>();
-	AssertAllCV<char(&&)[4][44],    true,  false>();
-	AssertAllCV<void (),            true,  false>();
-	AssertAllCV<void (...),         true,  false>();
-	AssertAllCV<void () noexcept,   true,  false>();
-	AssertAllCV<void (*)(),         true,  false>();
-	AssertAllCV<void (&)(),         true,  false>();
-	AssertAllCV<void (&&)(),        true,  false>();
-	AssertAllCV<void () &,          false, true >();
-	AssertAllCV<void () &&,         false, true >();
-	AssertAllCV<void () const,      false, true >();
-	AssertAllCV<void () const&,     false, true >();
-	AssertAllCV<void () const&&,    false, true >();
-	AssertAllCV<void () volatile,   false, true >();
-	AssertAllCV<void () volatile&,  false, true >();
-	AssertAllCV<void () volatile&&, false, true >();
-	AssertAllCV<void (...) &,       false, true >();
-	AssertAllCV<E,                  true,  false>();
-	AssertAllCV<EC,                 true,  false>();
-	AssertAllCV<C,                  true,  false>();
-	AssertAllCV<CC,                 true,  false>();
-	AssertAllCV<U,                  true,  false>();
-	AssertAllCV<UU,                 true,  false>();
-}
+	AssertAllCV<void,               false, false, true >();
+	AssertAllCV<std::nullptr_t,     true,  false, true >();
+	AssertAllCV<bool,               true,  false, true >();
+	AssertAllCV<int,                true,  false, true >();
+	AssertAllCV<double,             true,  false, true >();
+	AssertAllCV<char&,              true,  false, false>();
+	AssertAllCV<char&&,             true,  false, false>();
+	AssertAllCV<void*,              true,  false, true >();
+	AssertAllCV<const void*,        true,  false, true >();
+	AssertAllCV<int C::*,           true,  false, true >();
+	AssertAllCV<int C::**,          true,  false, true >();
+	AssertAllCV<int C::*&,          true,  false, false>();
+	AssertAllCV<int C::*&&,         true,  false, false>();
+	AssertAllCV<void (C::*)(),      true,  false, true >();
+	AssertAllCV<void (C::**)(),     true,  false, true >();
+	AssertAllCV<void (C::*&)(),     true,  false, false>();
+	AssertAllCV<void (C::*&&)(),    true,  false, false>();
+	AssertAllCV<void (C::*)() &,    true,  false, true >();
+	AssertAllCV<void (C::**)() &,   true,  false, true >();
+	AssertAllCV<void (C::*&)() &,   true,  false, false>();
+	AssertAllCV<void (C::*&&)() &,  true,  false, false>();
+	AssertAllCV<char[],             true,  false, false>();
+	AssertAllCV<char(*)[],          true,  false, true >();
+	AssertAllCV<char(&)[],          true,  false, false>();
+	AssertAllCV<char(&&)[],         true,  false, false>();
+	AssertAllCV<char[][44],         true,  false, false>();
+	AssertAllCV<char(*)[][44],      true,  false, true >();
+	AssertAllCV<char(&)[][44],      true,  false, false>();
+	AssertAllCV<char(&&)[][44],     true,  false, false>();
+	AssertAllCV<char[4],            true,  false, false>();
+	AssertAllCV<char(*)[4],         true,  false, true >();
+	AssertAllCV<char(&)[4],         true,  false, false>();
+	AssertAllCV<char(&&)[4],        true,  false, false>();
+	AssertAllCV<char[4][44],        true,  false, false>();
+	AssertAllCV<char(*)[4][44],     true,  false, true >();
+	AssertAllCV<char(&)[4][44],     true,  false, false>();
+	AssertAllCV<char(&&)[4][44],    true,  false, false>();
+	AssertAllCV<void (),            true,  false, false>();
+	AssertAllCV<void (...),         true,  false, false>();
+	AssertAllCV<void () noexcept,   true,  false, false>();
+	AssertAllCV<void (*)(),         true,  false, true >();
+	AssertAllCV<void (&)(),         true,  false, false>();
+	AssertAllCV<void (&&)(),        true,  false, false>();
+	AssertAllCV<void () &,          false, true,  true >();
+	AssertAllCV<void () &&,         false, true,  true >();
+	AssertAllCV<void () const,      false, true,  true >();
+	AssertAllCV<void () const&,     false, true,  true >();
+	AssertAllCV<void () const&&,    false, true,  true >();
+	AssertAllCV<void () volatile,   false, true,  true >();
+	AssertAllCV<void () volatile&,  false, true,  true >();
+	AssertAllCV<void () volatile&&, false, true,  true >();
+	AssertAllCV<void (...) &,       false, true,  true >();
+	AssertAllCV<E,                  true,  false, true >();
+	AssertAllCV<EC,                 true,  false, true >();
+	AssertAllCV<C,                  true,  false, true >();
+	AssertAllCV<CC,                 true,  false, true >();
+	AssertAllCV<U,                  true,  false, true >();
+	AssertAllCV<UU,                 true,  false, true >();
 
-
-// === Decayed =========================================================================================================
-
-template <class Type, bool ExpectedResult>
-static void TestDecayed()
-{
-	static_assert(BF::IsDecayed<Type>         == ExpectedResult);
-	static_assert(BF::IsDecayedT<Type>::value == ExpectedResult);
-	static_assert(BF::Decayed<Type>           == ExpectedResult);
-}
-
-
-BF_COMPILE_TIME_TEST(BF::Decayed auto) {}
-
-
-BF_COMPILE_TIME_TEST()
-{
-	TestDecayed<int,          true >();
-	TestDecayed<int*,         true >();
-	TestDecayed<const int*,   true >();
-
-	TestDecayed<int&,         false>();
-	TestDecayed<int&&,        false>();
-	TestDecayed<const int,    false>();
-	TestDecayed<volatile int, false>();
-
-	TestDecayed<int[],        false>();
-	TestDecayed<int(&)[],     false>();
-	TestDecayed<int(&&)[],    false>();
-	TestDecayed<int[7],       false>();
-	TestDecayed<int(&)[7],    false>();
-	TestDecayed<int(&&)[7],   false>();
-
-	TestDecayed<void (),      false>();
-	TestDecayed<void (*)(),   true >();
-	TestDecayed<void (&)(),   false>();
-	TestDecayed<void (&&)(),  false>();
+	// cv-qualified
+	AssertAllCV<const int,          true,  false, false>();
+	AssertAllCV<volatile int,       true,  false, false>();
+	AssertAllCV<const int[],        true,  false, false>();
+	AssertAllCV<const int[][44],    true,  false, false>();
+	AssertAllCV<const int[4],       true,  false, false>();
+	AssertAllCV<const int[4][44],   true,  false, false>();
 }
 
 

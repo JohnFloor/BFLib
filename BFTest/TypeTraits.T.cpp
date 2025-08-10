@@ -168,45 +168,6 @@ BF_COMPILE_TIME_TEST()
 }
 
 
-// === Decayed =========================================================================================================
-
-template <class Type, bool ExpectedResult>
-static void TestDecayed()
-{
-	static_assert(BF::IsDecayed<Type>         == ExpectedResult);
-	static_assert(BF::IsDecayedT<Type>::value == ExpectedResult);
-	static_assert(BF::Decayed<Type>           == ExpectedResult);
-}
-
-
-BF_COMPILE_TIME_TEST(BF::Decayed auto) {}
-
-
-BF_COMPILE_TIME_TEST()
-{
-	TestDecayed<int,          true >();
-	TestDecayed<int*,         true >();
-	TestDecayed<const int*,   true >();
-
-	TestDecayed<int&,         false>();
-	TestDecayed<int&&,        false>();
-	TestDecayed<const int,    false>();
-	TestDecayed<volatile int, false>();
-
-	TestDecayed<int[],        false>();
-	TestDecayed<int(&)[],     false>();
-	TestDecayed<int(&&)[],    false>();
-	TestDecayed<int[7],       false>();
-	TestDecayed<int(&)[7],    false>();
-	TestDecayed<int(&&)[7],   false>();
-
-	TestDecayed<void (),      false>();
-	TestDecayed<void (*)(),   true >();
-	TestDecayed<void (&)(),   false>();
-	TestDecayed<void (&&)(),  false>();
-}
-
-
 // === RelatedTo =======================================================================================================
 
 template <class Type1, class Type2, bool ExpectedResult>
@@ -356,6 +317,45 @@ BF_COMPILE_TIME_TEST()
 	AssertAllCV<CC,                 true,  false>();
 	AssertAllCV<U,                  true,  false>();
 	AssertAllCV<UU,                 true,  false>();
+}
+
+
+// === Decayed =========================================================================================================
+
+template <class Type, bool ExpectedResult>
+static void TestDecayed()
+{
+	static_assert(BF::IsDecayed<Type>         == ExpectedResult);
+	static_assert(BF::IsDecayedT<Type>::value == ExpectedResult);
+	static_assert(BF::Decayed<Type>           == ExpectedResult);
+}
+
+
+BF_COMPILE_TIME_TEST(BF::Decayed auto) {}
+
+
+BF_COMPILE_TIME_TEST()
+{
+	TestDecayed<int,          true >();
+	TestDecayed<int*,         true >();
+	TestDecayed<const int*,   true >();
+
+	TestDecayed<int&,         false>();
+	TestDecayed<int&&,        false>();
+	TestDecayed<const int,    false>();
+	TestDecayed<volatile int, false>();
+
+	TestDecayed<int[],        false>();
+	TestDecayed<int(&)[],     false>();
+	TestDecayed<int(&&)[],    false>();
+	TestDecayed<int[7],       false>();
+	TestDecayed<int(&)[7],    false>();
+	TestDecayed<int(&&)[7],   false>();
+
+	TestDecayed<void (),      false>();
+	TestDecayed<void (*)(),   true >();
+	TestDecayed<void (&)(),   false>();
+	TestDecayed<void (&&)(),  false>();
 }
 
 

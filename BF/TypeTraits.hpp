@@ -62,18 +62,6 @@ template <class T>
 concept			UInteger = Integer<T> && std::is_unsigned_v<T>;
 
 
-// === Decayed =========================================================================================================
-
-template <class T>
-constexpr bool	IsDecayed = std::is_same_v<T, std::decay_t<T>>;
-
-template <class T>
-struct			IsDecayedT : std::bool_constant<IsDecayed<T>> {};
-
-template <class T>
-concept			Decayed = IsDecayed<T>;
-
-
 // === RelatedTo =======================================================================================================
 
 template <class T1, class T2>
@@ -108,6 +96,18 @@ struct			IsAbominableT : std::bool_constant<IsAbominable<T>> {};
 
 template <class T>
 concept			Abominable = IsAbominable<T>;
+
+
+// === Decayed =========================================================================================================
+
+template <class T>
+constexpr bool	IsDecayed = std::is_same_v<T, std::decay_t<T>>;
+
+template <class T>
+struct			IsDecayedT : std::bool_constant<IsDecayed<T>> {};
+
+template <class T>
+concept			Decayed = IsDecayed<T>;
 
 
 // === AreConstRelated =================================================================================================

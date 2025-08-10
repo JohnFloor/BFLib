@@ -29,22 +29,22 @@ using			DontDeduce = std::type_identity_t<T>;
 // === Integer =========================================================================================================
 
 template <class T>
-struct			IsIntegerT : std::bool_constant<std::is_integral_v<T> && !std::is_same_v<std::remove_cv_t<T>, bool>> {};
+constexpr bool	IsInteger = std::is_integral_v<T> && !std::is_same_v<std::remove_cv_t<T>, bool>;
 
 template <class T>
-constexpr bool	IsInteger = IsIntegerT<T>::value;
+struct			IsIntegerT : std::bool_constant<IsInteger<T>> {};
 
 template <class T>
-concept			Integer = IsIntegerT<T>::value;
+concept			Integer = IsInteger<T>;
 
 
 // === SInteger ========================================================================================================
 
 template <class T>
-struct			IsSIntegerT : std::bool_constant<Integer<T> && std::is_signed_v<T>> {};
+constexpr bool	IsSInteger = IsInteger<T> && std::is_signed_v<T>;
 
 template <class T>
-constexpr bool	IsSInteger = Integer<T> && std::is_signed_v<T>;
+struct			IsSIntegerT : std::bool_constant<IsSInteger<T>> {};
 
 template <class T>
 concept			SInteger = Integer<T> && std::is_signed_v<T>;
@@ -53,10 +53,10 @@ concept			SInteger = Integer<T> && std::is_signed_v<T>;
 // === UInteger ========================================================================================================
 
 template <class T>
-struct			IsUIntegerT : std::bool_constant<Integer<T> && std::is_unsigned_v<T>> {};
+constexpr bool	IsUInteger = IsInteger<T> && std::is_unsigned_v<T>;
 
 template <class T>
-constexpr bool	IsUInteger = Integer<T> && std::is_unsigned_v<T>;
+struct			IsUIntegerT : std::bool_constant<IsUInteger<T>> {};
 
 template <class T>
 concept			UInteger = Integer<T> && std::is_unsigned_v<T>;
@@ -65,49 +65,49 @@ concept			UInteger = Integer<T> && std::is_unsigned_v<T>;
 // === Decayed =========================================================================================================
 
 template <class T>
-struct			IsDecayedT : std::is_same<T, std::decay_t<T>> {};
+constexpr bool	IsDecayed = std::is_same_v<T, std::decay_t<T>>;
 
 template <class T>
-constexpr bool	IsDecayed = IsDecayedT<T>::value;
+struct			IsDecayedT : std::bool_constant<IsDecayed<T>> {};
 
 template <class T>
-concept			Decayed = IsDecayedT<T>::value;
+concept			Decayed = IsDecayed<T>;
 
 
 // === RelatedTo =======================================================================================================
 
 template <class T1, class T2>
-struct			AreRelatedT : std::disjunction<std::is_base_of<T1, T2>, std::is_base_of<T2, T1>> {};
+constexpr bool	AreRelated = std::is_base_of_v<T1, T2> || std::is_base_of_v<T2, T1>;
 
 template <class T1, class T2>
-constexpr bool	AreRelated = AreRelatedT<T1, T2>::value;
+struct			AreRelatedT : std::bool_constant<AreRelated<T1, T2>> {};
 
 template <class T1, class T2>
-concept			RelatedTo = AreRelatedT<T1, T2>::value;
+concept			RelatedTo = AreRelated<T1, T2>;
 
 
 // === Referenceable ===================================================================================================
 
 template <class T>
-struct			IsReferenceableT : std::is_reference<std::add_lvalue_reference_t<T>> {};
+constexpr bool	IsReferenceable = std::is_reference_v<std::add_lvalue_reference_t<T>>;
 
 template <class T>
-constexpr bool	IsReferenceable = IsReferenceableT<T>::value;
+struct			IsReferenceableT : std::bool_constant<IsReferenceable<T>> {};
 
 template <class T>
-concept			Referenceable = IsReferenceableT<T>::value;
+concept			Referenceable = IsReferenceable<T>;
 
 
 // === Abominable ======================================================================================================
 
 template <class T>
-struct			IsAbominableT : std::conjunction<std::is_function<T>, std::negation<IsReferenceableT<T>>> {};
+constexpr bool	IsAbominable = std::is_function_v<T> && !IsReferenceable<T>;
 
 template <class T>
-constexpr bool	IsAbominable = IsAbominableT<T>::value;
+struct			IsAbominableT : std::bool_constant<IsAbominable<T>> {};
 
 template <class T>
-concept			Abominable = IsAbominableT<T>::value;
+concept			Abominable = IsAbominable<T>;
 
 
 // === AreConstRelated =================================================================================================

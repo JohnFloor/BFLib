@@ -56,35 +56,39 @@ namespace {
 		static constexpr int Fun(BF::SInteger auto) { return  11; }
 		static constexpr int Fun(BF::UInteger auto) { return  22; }
 	};
-
-	template <BF::Integer  Type> struct IntegerChecker  {};
-	template <BF::SInteger Type> struct SIntegerChecker {};
-	template <BF::UInteger Type> struct UIntegerChecker {};
 }
 
 
 template <class Type, bool ExpectedResult>
 static void TestInteger()
 {
-	static_assert(BF::IsInteger<Type>                         == ExpectedResult);
-	static_assert(requires { typename IntegerChecker<Type>; } == ExpectedResult);
+	static_assert(BF::IsInteger<Type>         == ExpectedResult);
+	static_assert(BF::IsIntegerT<Type>::value == ExpectedResult);
+	static_assert(BF::Integer<Type>           == ExpectedResult);
 }
 
 
 template <class Type, bool ExpectedResult>
 static void TestSInteger()
 {
-	static_assert(BF::IsSInteger<Type>                         == ExpectedResult);
-	static_assert(requires { typename SIntegerChecker<Type>; } == ExpectedResult);
+	static_assert(BF::IsSInteger<Type>         == ExpectedResult);
+	static_assert(BF::IsSIntegerT<Type>::value == ExpectedResult);
+	static_assert(BF::SInteger<Type>           == ExpectedResult);
 }
 
 
 template <class Type, bool ExpectedResult>
 static void TestUInteger()
 {
-	static_assert(BF::IsUInteger<Type>                         == ExpectedResult);
-	static_assert(requires { typename UIntegerChecker<Type>; } == ExpectedResult);
+	static_assert(BF::IsUInteger<Type>         == ExpectedResult);
+	static_assert(BF::IsUIntegerT<Type>::value == ExpectedResult);
+	static_assert(BF::UInteger<Type>           == ExpectedResult);
 }
+
+
+BF_COMPILE_TIME_TEST(BF::Integer  auto) {}
+BF_COMPILE_TIME_TEST(BF::SInteger auto) {}
+BF_COMPILE_TIME_TEST(BF::UInteger auto) {}
 
 
 enum class Signedness {
@@ -166,18 +170,16 @@ BF_COMPILE_TIME_TEST()
 
 // === Decayed =========================================================================================================
 
-namespace {
-	template <BF::Decayed Type>
-	struct DecayedChecker {};
-}
-
-
 template <class Type, bool ExpectedResult>
 static void TestDecayed()
 {
-	static_assert(BF::IsDecayed<Type>                         == ExpectedResult);
-	static_assert(requires { typename DecayedChecker<Type>; } == ExpectedResult);
+	static_assert(BF::IsDecayed<Type>         == ExpectedResult);
+	static_assert(BF::IsDecayedT<Type>::value == ExpectedResult);
+	static_assert(BF::Decayed<Type>           == ExpectedResult);
 }
+
+
+BF_COMPILE_TIME_TEST(BF::Decayed auto) {}
 
 
 BF_COMPILE_TIME_TEST()
@@ -207,21 +209,20 @@ BF_COMPILE_TIME_TEST()
 
 // === RelatedTo =======================================================================================================
 
-namespace {
-	template <class Type1, BF::RelatedTo<Type1> Type2>
-	struct RelatedToChecker {};
-}
-
-
 template <class Type1, class Type2, bool ExpectedResult>
 static void TestRelatedTo()
 {
-	static_assert(BF::AreRelated<Type1, Type2> == ExpectedResult);
-	static_assert(BF::AreRelated<Type2, Type1> == ExpectedResult);
+	static_assert(BF::AreRelated<Type1, Type2>         == ExpectedResult);
+	static_assert(BF::AreRelatedT<Type1, Type2>::value == ExpectedResult);
+	static_assert(BF::RelatedTo<Type1, Type2>          == ExpectedResult);
 
-	static_assert(requires { typename RelatedToChecker<Type1, Type2>; } == ExpectedResult);
-	static_assert(requires { typename RelatedToChecker<Type2, Type1>; } == ExpectedResult);
+	static_assert(BF::AreRelated<Type2, Type1>         == ExpectedResult);
+	static_assert(BF::AreRelatedT<Type2, Type1>::value == ExpectedResult);
+	static_assert(BF::RelatedTo<Type2, Type1>          == ExpectedResult);
 }
+
+
+BF_COMPILE_TIME_TEST(BF::RelatedTo<void> auto) {}
 
 
 BF_COMPILE_TIME_TEST()
@@ -258,6 +259,9 @@ static void AssertAllCV()
 	static_assert(TypeTrait<volatile Type>::value       == ExpectedResult);
 	static_assert(TypeTrait<const volatile Type>::value == ExpectedResult);
 }
+
+
+BF_COMPILE_TIME_TEST(BF::Referenceable auto) {}
 
 
 BF_COMPILE_TIME_TEST()
@@ -318,15 +322,12 @@ BF_COMPILE_TIME_TEST()
 	AssertAllCV<BF::IsReferenceableT, CC,                 true>();
 	AssertAllCV<BF::IsReferenceableT, U,                  true>();
 	AssertAllCV<BF::IsReferenceableT, UU,                 true>();
-
-	BF::Referenceable auto x = 1;
 }
 
 
 // === Abominable ======================================================================================================
 
-template <BF::Abominable Type>
-static void TestAbominable() {};
+BF_COMPILE_TIME_TEST(BF::Abominable auto) {}
 
 
 BF_COMPILE_TIME_TEST()
@@ -387,8 +388,6 @@ BF_COMPILE_TIME_TEST()
 	AssertAllCV<BF::IsAbominableT, CC,                 false>();
 	AssertAllCV<BF::IsAbominableT, U,                  false>();
 	AssertAllCV<BF::IsAbominableT, UU,                 false>();
-
-	TestAbominable<void () &>();
 }
 
 

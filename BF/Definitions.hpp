@@ -2,7 +2,7 @@
 
 
 #pragma once
-#include <cstddef>				// std::nullptr_t, std::size_t
+#include <cstddef>				// std::nullptr_t, std::size_t, std::byte
 #include <cstdint>				// fixed width integer types
 #include <initializer_list>		// std::initializer_list
 #include <utility>				// std::move, std::forward

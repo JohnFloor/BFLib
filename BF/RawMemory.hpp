@@ -45,6 +45,26 @@ private:
 };
 
 
+// === AsByteArray() ===================================================================================================
+
+template <class Type>
+auto& AsByteArray(Type& value)
+{
+	constexpr bool ConstDecayedOrArray = IsDecayedOrArray<std::remove_const_t<Type>>;
+	constexpr bool TriviallyCopyable   = ConstDecayedOrArray BF_IMPLIES std::is_trivially_copyable_v<Type>;
+	constexpr bool UniqueReps          = TriviallyCopyable BF_IMPLIES std::has_unique_object_representations_v<Type>;
+
+	static_assert(ConstDecayedOrArray, "'Type' must be decayed/const, or a bounded array of decayed/const types.");
+	static_assert(TriviallyCopyable,   "'Type' must be trivially copyable.");
+	static_assert(UniqueReps,          "A value of 'Type' can be represented by two distinct bit patterns. "
+									   "E.g., it has paddings or a floating point member.");
+
+	using CVByteArray = std29::copy_cv_t<Type, std::byte[sizeof(Type)]>;
+
+	return reinterpret_cast<CVByteArray&>(value);
+}
+
+
 // === IsNullReference =================================================================================================
 
 bool IsNullReference(auto&& value) noexcept

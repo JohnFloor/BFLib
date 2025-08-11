@@ -90,6 +90,59 @@ TEST(RawMemory, GenPtr)
 }
 
 
+// === AsByteArray() ===================================================================================================
+
+TEST(RawMemory, AsByteArray)
+{
+	class TestClass {
+		UInt64 array[4] = {};
+	};
+
+	using BA = std::byte[sizeof(TestClass)];
+
+	TestClass       testObj;
+	const TestClass cTestObj;
+
+	static_assert(std::is_same_v<decltype(BF::AsByteArray(testObj)),        BA&>);
+	static_assert(std::is_same_v<decltype(BF::AsByteArray(cTestObj)), const BA&>);
+
+	EXPECT_EQ(&reinterpret_cast<BA&>(testObj),        &BF::AsByteArray(testObj));
+	EXPECT_EQ(&reinterpret_cast<const BA&>(cTestObj), &BF::AsByteArray(cTestObj));
+}
+
+
+BF_COMPILE_TIME_TEST()
+{
+	int       arr[7]{};
+	const int cArr[7]{};
+	BF::AsByteArray(arr);
+	BF::AsByteArray(cArr);
+}
+
+
+BF_COMPILE_TIME_TEST()
+{
+	struct Virt {
+		virtual ~Virt() = default;
+	};
+
+	struct Padded {
+		UInt16 a = 0;
+		char   b = 0;
+	};
+
+	struct Empty {};
+
+//	{ volatile int x = 0;    BF::AsByteArray(x); }		// [CompilationError]: 'Type' must be decayed/const, or a bounded array of decayed/const types.
+//	{ volatile int x[7]{};   BF::AsByteArray(x); }		// [CompilationError]: 'Type' must be decayed/const, or a bounded array of decayed/const types.
+//	{ Virt         x;        BF::AsByteArray(x); }		// [CompilationError]: 'Type' must be trivially copyable.
+//	{ float        x = 0.0;  BF::AsByteArray(x); }		// [CompilationError]: A value of 'Type' can be represented by two distinct bit patterns.
+//	{ double       x = 0.0;  BF::AsByteArray(x); }		// [CompilationError]: A value of 'Type' can be represented by two distinct bit patterns.
+//	{ Padded       x;        BF::AsByteArray(x); }		// [CompilationError]: A value of 'Type' can be represented by two distinct bit patterns.
+//	{ Empty        x;        BF::AsByteArray(x); }		// [CompilationError]: A value of 'Type' can be represented by two distinct bit patterns.
+}
+
+
 // === IsNullReference =================================================================================================
 
 TEST(RawMemory, IsNullReference)

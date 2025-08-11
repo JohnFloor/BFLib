@@ -143,6 +143,19 @@ BF_COMPILE_TIME_TEST()
 }
 
 
+BF_COMPILE_TIME_TEST()
+{
+	{ int                x = 0; BF::AsByteArray(x); }
+	{ const int          x = 0; BF::AsByteArray(x); }
+//	{ volatile int       x = 0; BF::AsByteArray(x); }	// [CompilationError]: 'Type' must be decayed/const, or a bounded array of decayed/const types.
+//	{ const volatile int x = 0; BF::AsByteArray(x); }	// [CompilationError]: 'Type' must be decayed/const, or a bounded array of decayed/const types.
+//	{ int                x = 0; BF::AsByteArray(BF::Move(x)); }		// [CompilationError]: attempting to reference a deleted function
+//	{ const int          x = 0; BF::AsByteArray(BF::Move(x)); }		// [CompilationError]: attempting to reference a deleted function
+//	{ volatile int       x = 0; BF::AsByteArray(BF::Move(x)); }		// [CompilationError]: attempting to reference a deleted function
+//	{ const volatile int x = 0; BF::AsByteArray(BF::Move(x)); }		// [CompilationError]: attempting to reference a deleted function
+}
+
+
 // === IsNullReference =================================================================================================
 
 TEST(RawMemory, IsNullReference)

@@ -65,6 +65,9 @@ auto& AsByteArray(Type& value)
 }
 
 
+void AsByteArray(const auto&&) = delete;		// rvalues are not accepted
+
+
 // === IsNullReference =================================================================================================
 
 bool IsNullReference(auto&& value) noexcept

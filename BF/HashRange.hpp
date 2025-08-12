@@ -4,8 +4,6 @@
 #pragma once
 #include <random>
 #include <ranges>
-#include <string>
-#include <string_view>
 #include "BF/Hash.hpp"
 #include "BF/RawMemory.hpp"
 
@@ -74,25 +72,6 @@ private:
 };
 
 
-// === class HashString ================================================================================================
-
-template <class Char>
-class HashString final {
-public:
-	static_assert(IsDecayed<Char>, "'Char' must be decayed.");
-
-	constexpr explicit HashString(const Char* str) : mStr(str) {}
-	constexpr explicit HashString(std::basic_string_view<Char> str) : mStr(str) {}		// note, that it is already hashable
-	constexpr explicit HashString(const std::basic_string<Char>& str) : mStr(str) {}	// note, that it is already hashable
-
-private:
-	template <class Type>
-	friend struct std::hash;
-
-	const std::basic_string_view<Char> mStr;
-};
-
-
 // === class HashRawMemory =============================================================================================
 
 template <std::size_t Size>
@@ -127,15 +106,6 @@ struct std::hash<BF::HashRange<Range>> {
 	[[nodiscard]]
 	constexpr static std::size_t operator()(BF::HashRange<Range> value) {
 		return BF::ImpHash::GetRangeHash(value.mRange);
-	}
-};
-
-
-template <class Char>
-struct std::hash<BF::HashString<Char>> {
-	[[nodiscard]]
-	constexpr static std::size_t operator()(BF::HashString<Char> value) {
-		return BF::ImpHash::GetRangeHash(value.mStr);
 	}
 };
 

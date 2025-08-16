@@ -499,10 +499,10 @@ constexpr std::size_t BF_DUMMY = std::hash<ConstexprF>()({});
 // std::size_t BF_DUMMY(BF::Hash(0));							// [CompilationError]: 'BF::Hash::operator size_t': cannot access private member
 
 
-// === Hashing a class template of a library, which cannot be modified =================================================
+// === Hashing a class template of a 3rd party library =================================================================
 // There are four roles in this example:
 //   - Role0: The author of library 'BF'.
-//   - Role1: The author of library 'Lib'.
+//   - Role1: The author of the 3rd party library 'Lib'.
 //   - Role2: C++ infrastructure developer of company XYZ. Client of Role0 and Role1. Makes 'BF' and 'Lib' available to
 //            all application developers. Commits them to XYZ's repository. Includes them in the build. Updates them, if
 //            necessary. And, makes some types of 'Lib' hashable with the help of 'BF'.
@@ -510,37 +510,34 @@ constexpr std::size_t BF_DUMMY = std::hash<ConstexprF>()({});
 //            Since this header has an adaptation in XYZ, he is only allowed to #include "Adapted/Lib/Counted.hpp".
 
 // === Contents of "Lib/Counted.hpp" (author: Role1):
+/* #pragma once */
 namespace Lib {
 	template <class Type>
-	class Counted {
-	public:
-		const Type& GetType () const  { return mType; }
-		UInt16      GetCount () const { return mCount; }
-	private:
-		Type   mType{};
-		UInt16 mCount{};
+	struct Counted {
+		Type     type{};
+		unsigned count{};
 	};
 }
 
 
 // === Contents of "Adapted/Lib/Counted.hpp" (author: Role2):
-/* #include "Lib/Counted.hpp" */
+/* #pragma once */
+/* #include <type_traits>     */
 /* #include "BF/Hash.hpp"     */
+/* #include "Lib/Counted.hpp" */
 namespace Lib {
-	template <class Type>
-	requires std::equality_comparable<Type>
+	template <std::equality_comparable Type>
 	bool operator==(const Counted<Type>& leftOp, const Counted<Type>& rightOp)
 	{
-		return leftOp.GetType() == rightOp.GetType() && leftOp.GetCount() == rightOp.GetCount();
+		return leftOp.type == rightOp.type && leftOp.count == rightOp.count;
 	}
 }
 
-template <class Type>
-requires BF::StdHashable<Type>
+template <BF::StdHashable Type>
 struct std::hash<Lib::Counted<Type>> {
 	[[nodiscard]]
 	static std::size_t operator()(const Lib::Counted<Type>& value) {
-		return BF::Hash(value.GetType(), value.GetCount());		// 'BF::Hash' will convert to 'std::size_t' inside 'std::hash' specializations
+		return BF::Hash(value.type, value.count);				// 'BF::Hash' will convert to 'std::size_t' inside 'std::hash' specializations
 	}
 };
 

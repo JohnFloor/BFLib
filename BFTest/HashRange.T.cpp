@@ -22,19 +22,28 @@ std::basic_string_view<volatile char> BF_DUMMY;		// OK
 // === Usage example ===================================================================================================
 
 struct ComplexClass {
-	class Inner {
+	class UniqueObjReps {
 		Int64 a;
 		Int32 b[2];
 	};
 
 	BF::Hash BF_GetHash() const {
-		return { mInt, std::string_view(mStr), BF::HashRange(mRange), BF::HashRawMemory(mMemory) };
+		return { mInt,
+				 std::string_view(mStr),
+				 BF::HashRange(mRange),
+				 BF::HashRawMemory(mUniqueObjReps),
+				 BF::HashRawMemory(mMem1Begin, mMem1Size),
+				 BF::HashRawMemory(mMem2Begin, mMem2End) };
 	}
 
 	UInt64              mInt;
 	const char*         mStr;
 	std::vector<UInt16> mRange;
-	Inner               mMemory;
+	UniqueObjReps       mUniqueObjReps;
+	std::byte*          mMem1Begin;
+	std::size_t         mMem1Size;
+	std::byte*          mMem2Begin;
+	std::byte*          mMem2End;
 };
 
 
@@ -66,6 +75,9 @@ BF_COMPILE_TIME_TEST()
 	TestHashRange<std::basic_string_view<char>,       DoHash>();
 	TestHashRange<std::basic_string_view<const char>, DoHash>();
 
+	static_assert(std::is_final_v<BF::HashRange<int[7]>>);
+	static_assert(std::is_final_v<BF::HashRange<std::vector<int>>>);
+
 //	TestHashRange<int>();									// [CompilationError]: 'Range' must be a random access range.
 //	TestHashRange<const int>();								// [CompilationError]: 'Range' must be a random access range.
 //	TestHashRange<volatile int>();							// [CompilationError]: 'Range' must be a random access range.
@@ -96,6 +108,26 @@ BF_COMPILE_TIME_TEST()
 	TestHashRawMemory<const int[7]>();
 
 	// BF::AsByteArray()'s static_assert's are tested in BF::AsByteArray()'s test
+
+	static_assert(std::is_final_v<BF::HashRawMemory<7>>);
+	static_assert(std::is_final_v<BF::HashRawMemory<std::dynamic_extent>>);
+
+	struct Copy {
+		Copy(const Copy&) {}
+		char member = 0;
+	};
+
+	struct Empty {};
+
+	using VolInt = volatile int;
+
+//	{ int value = 0; BF::HashRawMemory<std::dynamic_extent> h(value); }		// [CompilationError]: Use a static extent.
+//	{ int value = 0; BF::HashRawMemory<3>                   h(value); }		// [CompilationError]: 'Type' has bad size.
+//	{ int*    b{}; VolInt*    e{}; BF::HashRawMemory h(b, e); }				// [CompilationError]: 'Type1' and 'Type2' must be the same.
+//	{ VolInt* b{}; VolInt*    e{}; BF::HashRawMemory h(b, e); }				// [CompilationError]: 'Type1' must be decayed.
+	{ int*    b{}; const int* e{}; BF::HashRawMemory h(b, e); }
+//	{ Copy*   b{}; Copy*      e{}; BF::HashRawMemory h(b, e); }				// [CompilationError]: 'Type1' must be trivially copyable.
+//	{ Empty*  b{}; Empty*     e{}; BF::HashRawMemory h(b, e); }				// [CompilationError]: A value of 'Type1' can be represented by two distinct bit patterns.
 }
 
 

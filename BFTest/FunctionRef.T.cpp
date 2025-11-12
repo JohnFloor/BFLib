@@ -66,12 +66,12 @@ static void TestOneCall()
 
 	std::decay_t<Initializer> in1;
 	BF::FunctionRef<Signature> f1 = static_cast<Initializer&&>(in1);	// 'f1' is initialized
-	EXPECT_EQ(ExpectedQual, f1());
+	EXPECT_EQ(f1(), ExpectedQual);
 
 	std::decay_t<Initializer> in2;
 	BF::FunctionRef<Signature> f2;
 	f2 = static_cast<Initializer&&>(in2);								// 'f2' is assigned
-	EXPECT_EQ(ExpectedQual, f2());
+	EXPECT_EQ(f2(), ExpectedQual);
 }
 
 
@@ -85,14 +85,14 @@ static void TestCopyMove()
 	using DestFun   = BF::FunctionRef<DestinationSignature>;
 	using SourceFun = BF::MemsetValue<BF::FunctionRef<SourceSignature>>;
 
-	{ DestFun    f = SourceFun(&S::Fun).GetL();  EXPECT_EQ(123, f()); }
-	{ DestFun f; f = SourceFun(&S::Fun).GetL();  EXPECT_EQ(123, f()); }
-	{ DestFun    f = SourceFun(&S::Fun).GetCL(); EXPECT_EQ(123, f()); }
-	{ DestFun f; f = SourceFun(&S::Fun).GetCL(); EXPECT_EQ(123, f()); }
-	{ DestFun    f = SourceFun(&S::Fun).GetR();  EXPECT_EQ(123, f()); }
-	{ DestFun f; f = SourceFun(&S::Fun).GetR();  EXPECT_EQ(123, f()); }
-	{ DestFun    f = SourceFun(&S::Fun).GetCR(); EXPECT_EQ(123, f()); }
-	{ DestFun f; f = SourceFun(&S::Fun).GetCR(); EXPECT_EQ(123, f()); }
+	{ DestFun    f = SourceFun(&S::Fun).GetL();  EXPECT_EQ(f(), 123); }
+	{ DestFun f; f = SourceFun(&S::Fun).GetL();  EXPECT_EQ(f(), 123); }
+	{ DestFun    f = SourceFun(&S::Fun).GetCL(); EXPECT_EQ(f(), 123); }
+	{ DestFun f; f = SourceFun(&S::Fun).GetCL(); EXPECT_EQ(f(), 123); }
+	{ DestFun    f = SourceFun(&S::Fun).GetR();  EXPECT_EQ(f(), 123); }
+	{ DestFun f; f = SourceFun(&S::Fun).GetR();  EXPECT_EQ(f(), 123); }
+	{ DestFun    f = SourceFun(&S::Fun).GetCR(); EXPECT_EQ(f(), 123); }
+	{ DestFun f; f = SourceFun(&S::Fun).GetCR(); EXPECT_EQ(f(), 123); }
 
 	static_assert(std::is_trivially_copyable_v<DestFun>);
 
@@ -126,17 +126,17 @@ TEST(StdFunctionDemo, StdRef)
 
 	int i = 0;
 	S::ThreeTimes([=] () mutable { i++; });						// captures by copy, 'i' is incremented in the temporary std::function
-	EXPECT_EQ(0, i);
+	EXPECT_EQ(i, 0);
 
 	S::ThreeTimes([&] { i++; });								// captures by reference, the local 'i' is incremented
-	EXPECT_EQ(3, i);
+	EXPECT_EQ(i, 3);
 
 	Counter c;
 	S::ThreeTimes(c);											// 'count' is incremented in the temporary std::function
-	EXPECT_EQ(0, c.count);
+	EXPECT_EQ(c.count, 0);
 
 	S::ThreeTimes(std::ref(c));									// with std::ref() 'c' isn't copied or moved
-	EXPECT_EQ(3, c.count);
+	EXPECT_EQ(c.count, 3);
 }
 
 
@@ -163,7 +163,7 @@ TEST(StdFunctionDemo, ConstIncorrectness)						// https://wg21.link/N4348
 
 	f();
 
-	EXPECT_EQ(1, f.target<Counter>()->count);					// 'f' is const, but 'count' is modified in it
+	EXPECT_EQ(f.target<Counter>()->count, 1);					// 'f' is const, but 'count' is modified in it
 }
 
 
@@ -180,10 +180,10 @@ TEST(StdFunctionDemo, FromOverloaded)
 
 	// This works. The template argument can be inferred as 'Doub', and 'Doub' is callable with the given arguments.
 
-	{ Doub d; std::function<int ()>        f = d;   EXPECT_EQ(1, f());      }
-	{ Doub d; std::function<int ()>     f; f = d;   EXPECT_EQ(1, f());      }
-	{ Doub d; std::function<int (bool)>    f = d;   EXPECT_EQ(2, f(false)); }
-	{ Doub d; std::function<int (bool)> f; f = d;   EXPECT_EQ(2, f(false)); }
+	{ Doub d; std::function<int ()>        f = d;   EXPECT_EQ(f(),      1); }
+	{ Doub d; std::function<int ()>     f; f = d;   EXPECT_EQ(f(),      1); }
+	{ Doub d; std::function<int (bool)>    f = d;   EXPECT_EQ(f(false), 2); }
+	{ Doub d; std::function<int (bool)> f; f = d;   EXPECT_EQ(f(false), 2); }
 }
 
 
@@ -196,19 +196,19 @@ TEST(StdFunctionDemo, OverloadingOnCallableSignature_Convertible)
 
 	S s;
 
-	EXPECT_EQ(1, s.Enumerate(std::function<void ()>{}));
-	EXPECT_EQ(2, s.Enumerate(std::function<bool ()>{}));
+	EXPECT_EQ(s.Enumerate(std::function<void ()>{}), 1);
+	EXPECT_EQ(s.Enumerate(std::function<bool ()>{}), 2);
 
-	EXPECT_EQ(1, s.Enumerate(Single<void ()>::SF));
+	EXPECT_EQ(s.Enumerate(Single<void ()>::SF), 1);
 //	s.Enumerate(Single<bool ()>::SF);					// error (ambiguous)
 
-	EXPECT_EQ(1, s.Enumerate(Single<void ()>{}));
+	EXPECT_EQ(s.Enumerate(Single<void ()>{}), 1);
 //	s.Enumerate(Single<bool ()>{});						// error (ambiguous)
 
 //	s.Enumerate(Double<void ()>::SF);					// error (won't initialize from 'overloaded-function')
 //	s.Enumerate(Double<bool ()>::SF);					// error (won't initialize from 'overloaded-function')
 
-	EXPECT_EQ(1, s.Enumerate(Double<void ()>{}));
+	EXPECT_EQ(s.Enumerate(Double<void ()>{}), 1);
 //	s.Enumerate(Double<bool ()>{});						// error (ambiguous)
 }
 
@@ -222,20 +222,20 @@ TEST(StdFunctionDemo, OverloadingOnCallableSignature_NotConvertible)
 
 	S s;
 
-	EXPECT_EQ(1, s.Enumerate(std::function<short* ()>{}));
-	EXPECT_EQ(2, s.Enumerate(std::function<long* ()>{}));
+	EXPECT_EQ(s.Enumerate(std::function<short* ()>{}), 1);
+	EXPECT_EQ(s.Enumerate(std::function<long* ()>{}),  2);
 
-	EXPECT_EQ(1, s.Enumerate(Single<short* ()>::SF));
-	EXPECT_EQ(2, s.Enumerate(Single<long* ()>::SF));
+	EXPECT_EQ(s.Enumerate(Single<short* ()>::SF), 1);
+	EXPECT_EQ(s.Enumerate(Single<long* ()>::SF),  2);
 
-	EXPECT_EQ(1, s.Enumerate(Single<short* ()>{}));
-	EXPECT_EQ(2, s.Enumerate(Single<long* ()>{}));
+	EXPECT_EQ(s.Enumerate(Single<short* ()>{}), 1);
+	EXPECT_EQ(s.Enumerate(Single<long* ()>{}),  2);
 
 //	s.Enumerate(Double<short* ()>::SF);					// error (won't initialize from 'overloaded-function')
 //	s.Enumerate(Double<long* ()>::SF);					// error (won't initialize from 'overloaded-function')
 
-	EXPECT_EQ(1, s.Enumerate(Double<short* ()>{}));
-	EXPECT_EQ(2, s.Enumerate(Double<long* ()>{}));
+	EXPECT_EQ(s.Enumerate(Double<short* ()>{}), 1);
+	EXPECT_EQ(s.Enumerate(Double<long* ()>{}),  2);
 }
 
 
@@ -248,28 +248,28 @@ TEST(StdFunctionDemo, OverloadingOnCallableSignature_Const)
 
 	S s;
 
-	EXPECT_EQ(1, s.Enumerate(std::function<void (double&)>{}));
+	EXPECT_EQ(s.Enumerate(std::function<void (double&)>{}), 1);
 //	s.Enumerate(std::function<void (const double&)>{});				// error: overloaded functions have similar conversions
 
-	EXPECT_EQ(1, s.Enumerate(Single<void (double&)>::SF));
-	EXPECT_EQ(1, s.Enumerate(Single<void (const double&)>::SF));	// surprise! (calls #1)
+	EXPECT_EQ(s.Enumerate(Single<void (double&)>::SF),       1);
+	EXPECT_EQ(s.Enumerate(Single<void (const double&)>::SF), 1);	// surprise! (calls #1)
 
-	EXPECT_EQ(1, s.Enumerate(Single<void (double&)>{}));
-	EXPECT_EQ(1, s.Enumerate(Single<void (const double&)>{}));		// surprise! (calls #1)
+	EXPECT_EQ(s.Enumerate(Single<void (double&)>{}),       1);
+	EXPECT_EQ(s.Enumerate(Single<void (const double&)>{}), 1);		// surprise! (calls #1)
 
 //	s.Enumerate(Double<void (double&)>::SF);						// error (won't initialize from 'overloaded-function')
 //	s.Enumerate(Double<void (const double&)>::SF);					// error (won't initialize from 'overloaded-function')
 
-	EXPECT_EQ(1, s.Enumerate(Double<void (double&)>{}));
-	EXPECT_EQ(1, s.Enumerate(Double<void (const double&)>{}));		// surprise! (calls #1)
+	EXPECT_EQ(s.Enumerate(Double<void (double&)>{}),       1);
+	EXPECT_EQ(s.Enumerate(Double<void (const double&)>{}), 1);		// surprise! (calls #1)
 
 	const S cs;
 
-	EXPECT_EQ(2, cs.Enumerate(BF::FunctionRef<void (const double&)>{}));
-	EXPECT_EQ(2, cs.Enumerate(Single<void (const double&)>::SF));
-	EXPECT_EQ(2, cs.Enumerate(Single<void (const double&)>{}));
+	EXPECT_EQ(cs.Enumerate(BF::FunctionRef<void (const double&)>{}), 2);
+	EXPECT_EQ(cs.Enumerate(Single<void (const double&)>::SF), 2);
+	EXPECT_EQ(cs.Enumerate(Single<void (const double&)>{}),   2);
 //	cs.Enumerate(Double<void (const double&)>::SF);					// error (won't initialize from 'overloaded-function')
-	EXPECT_EQ(2, cs.Enumerate(Double<void (const double&)>{}));
+	EXPECT_EQ(cs.Enumerate(Double<void (const double&)>{}),   2);
 }
 
 
@@ -297,15 +297,15 @@ TEST(FunctionRef, FromOverloaded)
 {
 	using Doub = Double<int (), int (bool)>;
 
-	{         BF::FunctionRef<int ()>        f = &Doub::SF; EXPECT_EQ(1, f());      }
-	{         BF::FunctionRef<int ()>     f; f = &Doub::SF; EXPECT_EQ(1, f());      }
-	{         BF::FunctionRef<int (bool)>    f = &Doub::SF; EXPECT_EQ(2, f(false)); }
-	{         BF::FunctionRef<int (bool)> f; f = &Doub::SF; EXPECT_EQ(2, f(false)); }
+	{         BF::FunctionRef<int ()>        f = &Doub::SF; EXPECT_EQ(f(),      1); }
+	{         BF::FunctionRef<int ()>     f; f = &Doub::SF; EXPECT_EQ(f(),      1); }
+	{         BF::FunctionRef<int (bool)>    f = &Doub::SF; EXPECT_EQ(f(false), 2); }
+	{         BF::FunctionRef<int (bool)> f; f = &Doub::SF; EXPECT_EQ(f(false), 2); }
 
-	{ Doub d; BF::FunctionRef<int ()>        f = d;         EXPECT_EQ(1, f());      }
-	{ Doub d; BF::FunctionRef<int ()>     f; f = d;         EXPECT_EQ(1, f());      }
-	{ Doub d; BF::FunctionRef<int (bool)>    f = d;         EXPECT_EQ(2, f(false)); }
-	{ Doub d; BF::FunctionRef<int (bool)> f; f = d;         EXPECT_EQ(2, f(false)); }
+	{ Doub d; BF::FunctionRef<int ()>        f = d;         EXPECT_EQ(f(),      1); }
+	{ Doub d; BF::FunctionRef<int ()>     f; f = d;         EXPECT_EQ(f(),      1); }
+	{ Doub d; BF::FunctionRef<int (bool)>    f = d;         EXPECT_EQ(f(false), 2); }
+	{ Doub d; BF::FunctionRef<int (bool)> f; f = d;         EXPECT_EQ(f(false), 2); }
 }
 
 
@@ -318,20 +318,20 @@ TEST(FunctionRef, OverloadingOnCallableSignature_Convertible)
 
 	S s;
 
-	EXPECT_EQ(1, s.Enumerate(BF::FunctionRef<void ()>{}));
-	EXPECT_EQ(2, s.Enumerate(BF::FunctionRef<bool ()>{}));
+	EXPECT_EQ(s.Enumerate(BF::FunctionRef<void ()>{}), 1);
+	EXPECT_EQ(s.Enumerate(BF::FunctionRef<bool ()>{}), 2);
 
-	EXPECT_EQ(1, s.Enumerate(Single<void ()>::SF));
-	EXPECT_EQ(2, s.Enumerate(Single<bool ()>::SF));
+	EXPECT_EQ(s.Enumerate(Single<void ()>::SF),        1);
+	EXPECT_EQ(s.Enumerate(Single<bool ()>::SF),        2);
 
-	EXPECT_EQ(1, s.Enumerate(Single<void ()>{}));
-	EXPECT_EQ(2, s.Enumerate(Single<bool ()>{}));
+	EXPECT_EQ(s.Enumerate(Single<void ()>{}),          1);
+	EXPECT_EQ(s.Enumerate(Single<bool ()>{}),          2);
 
-	EXPECT_EQ(1, s.Enumerate(Double<void ()>::SF));
-	EXPECT_EQ(2, s.Enumerate(Double<bool ()>::SF));
+	EXPECT_EQ(s.Enumerate(Double<void ()>::SF),        1);
+	EXPECT_EQ(s.Enumerate(Double<bool ()>::SF),        2);
 
-	EXPECT_EQ(1, s.Enumerate(Double<void ()>{}));
-	EXPECT_EQ(2, s.Enumerate(Double<bool ()>{}));
+	EXPECT_EQ(s.Enumerate(Double<void ()>{}),          1);
+	EXPECT_EQ(s.Enumerate(Double<bool ()>{}),          2);
 }
 
 
@@ -351,28 +351,28 @@ TEST(FunctionRef, OverloadingOnCallableSignature_Const)
 
 	S s;
 
-	EXPECT_EQ(1, s.Enumerate(BF::FunctionRef<void (double&)>{}));
-	EXPECT_EQ(2, s.Enumerate(BF::FunctionRef<void (const double&)>{}));
+	EXPECT_EQ(s.Enumerate(BF::FunctionRef<void (double&)>{}),        1);
+	EXPECT_EQ(s.Enumerate(BF::FunctionRef<void (const double&)>{}),  2);
 
-	EXPECT_EQ(1, s.Enumerate(Single<void (double&)>::SF));
-	EXPECT_EQ(2, s.Enumerate(Single<void (const double&)>::SF));
+	EXPECT_EQ(s.Enumerate(Single<void (double&)>::SF),               1);
+	EXPECT_EQ(s.Enumerate(Single<void (const double&)>::SF),         2);
 
-	EXPECT_EQ(1, s.Enumerate(Single<void (double&)>{}));
-	EXPECT_EQ(2, s.Enumerate(Single<void (const double&)>{}));
+	EXPECT_EQ(s.Enumerate(Single<void (double&)>{}),                 1);
+	EXPECT_EQ(s.Enumerate(Single<void (const double&)>{}),           2);
 
-	EXPECT_EQ(1, s.Enumerate(Double<void (double&)>::SF));
-	EXPECT_EQ(2, s.Enumerate(Double<void (const double&)>::SF));
+	EXPECT_EQ(s.Enumerate(Double<void (double&)>::SF),               1);
+	EXPECT_EQ(s.Enumerate(Double<void (const double&)>::SF),         2);
 
-	EXPECT_EQ(1, s.Enumerate(Double<void (double&)>{}));
-	EXPECT_EQ(2, s.Enumerate(Double<void (const double&)>{}));
+	EXPECT_EQ(s.Enumerate(Double<void (double&)>{}),                 1);
+	EXPECT_EQ(s.Enumerate(Double<void (const double&)>{}),           2);
 
 	const S cs;
 
-	EXPECT_EQ(2, cs.Enumerate(BF::FunctionRef<void (const double&)>{}));
-	EXPECT_EQ(2, cs.Enumerate(Single<void (const double&)>::SF));
-	EXPECT_EQ(2, cs.Enumerate(Single<void (const double&)>{}));
-	EXPECT_EQ(2, cs.Enumerate(Double<void (const double&)>::SF));
-	EXPECT_EQ(2, cs.Enumerate(Double<void (const double&)>{}));
+	EXPECT_EQ(cs.Enumerate(BF::FunctionRef<void (const double&)>{}), 2);
+	EXPECT_EQ(cs.Enumerate(Single<void (const double&)>::SF),        2);
+	EXPECT_EQ(cs.Enumerate(Single<void (const double&)>{}),          2);
+	EXPECT_EQ(cs.Enumerate(Double<void (const double&)>::SF),        2);
+	EXPECT_EQ(cs.Enumerate(Double<void (const double&)>{}),          2);
 }
 
 
@@ -387,47 +387,47 @@ TEST(FunctionRef, OverloadingOnCallableSignature_ConstConvertible)
 
 	S s;
 
-	EXPECT_EQ(1, s.Enumerate(BF::FunctionRef<void (double&)>{}));
-	EXPECT_EQ(2, s.Enumerate(BF::FunctionRef<void (const double&)>{}));
-	EXPECT_EQ(3, s.Enumerate(BF::FunctionRef<bool (double&)>{}));
-	EXPECT_EQ(4, s.Enumerate(BF::FunctionRef<bool (const double&)>{}));
+	EXPECT_EQ(s.Enumerate(BF::FunctionRef<void (double&)>{}),        1);
+	EXPECT_EQ(s.Enumerate(BF::FunctionRef<void (const double&)>{}),  2);
+	EXPECT_EQ(s.Enumerate(BF::FunctionRef<bool (double&)>{}),        3);
+	EXPECT_EQ(s.Enumerate(BF::FunctionRef<bool (const double&)>{}),  4);
 
-	EXPECT_EQ(1, s.Enumerate(Single<void (double&)>::SF));
-	EXPECT_EQ(2, s.Enumerate(Single<void (const double&)>::SF));
-	EXPECT_EQ(3, s.Enumerate(Single<bool (double&)>::SF));
-	EXPECT_EQ(4, s.Enumerate(Single<bool (const double&)>::SF));
+	EXPECT_EQ(s.Enumerate(Single<void (double&)>::SF),               1);
+	EXPECT_EQ(s.Enumerate(Single<void (const double&)>::SF),         2);
+	EXPECT_EQ(s.Enumerate(Single<bool (double&)>::SF),               3);
+	EXPECT_EQ(s.Enumerate(Single<bool (const double&)>::SF),         4);
 
-	EXPECT_EQ(1, s.Enumerate(Single<void (double&)>{}));
-	EXPECT_EQ(2, s.Enumerate(Single<void (const double&)>{}));
-	EXPECT_EQ(3, s.Enumerate(Single<bool (double&)>{}));
-	EXPECT_EQ(4, s.Enumerate(Single<bool (const double&)>{}));
+	EXPECT_EQ(s.Enumerate(Single<void (double&)>{}),                 1);
+	EXPECT_EQ(s.Enumerate(Single<void (const double&)>{}),           2);
+	EXPECT_EQ(s.Enumerate(Single<bool (double&)>{}),                 3);
+	EXPECT_EQ(s.Enumerate(Single<bool (const double&)>{}),           4);
 
-	EXPECT_EQ(1, s.Enumerate(Double<void (double&)>::SF));
-	EXPECT_EQ(2, s.Enumerate(Double<void (const double&)>::SF));
-	EXPECT_EQ(3, s.Enumerate(Double<bool (double&)>::SF));
-	EXPECT_EQ(4, s.Enumerate(Double<bool (const double&)>::SF));
+	EXPECT_EQ(s.Enumerate(Double<void (double&)>::SF),               1);
+	EXPECT_EQ(s.Enumerate(Double<void (const double&)>::SF),         2);
+	EXPECT_EQ(s.Enumerate(Double<bool (double&)>::SF),               3);
+	EXPECT_EQ(s.Enumerate(Double<bool (const double&)>::SF),         4);
 
-	EXPECT_EQ(1, s.Enumerate(Double<void (double&)>{}));
-	EXPECT_EQ(2, s.Enumerate(Double<void (const double&)>{}));
-	EXPECT_EQ(3, s.Enumerate(Double<bool (double&)>{}));
-	EXPECT_EQ(4, s.Enumerate(Double<bool (const double&)>{}));
+	EXPECT_EQ(s.Enumerate(Double<void (double&)>{}),                 1);
+	EXPECT_EQ(s.Enumerate(Double<void (const double&)>{}),           2);
+	EXPECT_EQ(s.Enumerate(Double<bool (double&)>{}),                 3);
+	EXPECT_EQ(s.Enumerate(Double<bool (const double&)>{}),           4);
 
 	const S cs;
 
-	EXPECT_EQ(2, cs.Enumerate(BF::FunctionRef<void (const double&)>{}));
-	EXPECT_EQ(4, cs.Enumerate(BF::FunctionRef<bool (const double&)>{}));
+	EXPECT_EQ(cs.Enumerate(BF::FunctionRef<void (const double&)>{}), 2);
+	EXPECT_EQ(cs.Enumerate(BF::FunctionRef<bool (const double&)>{}), 4);
 
-	EXPECT_EQ(2, cs.Enumerate(Single<void (const double&)>::SF));
-	EXPECT_EQ(4, cs.Enumerate(Single<bool (const double&)>::SF));
+	EXPECT_EQ(cs.Enumerate(Single<void (const double&)>::SF),        2);
+	EXPECT_EQ(cs.Enumerate(Single<bool (const double&)>::SF),        4);
 
-	EXPECT_EQ(2, cs.Enumerate(Single<void (const double&)>{}));
-	EXPECT_EQ(4, cs.Enumerate(Single<bool (const double&)>{}));
+	EXPECT_EQ(cs.Enumerate(Single<void (const double&)>{}),          2);
+	EXPECT_EQ(cs.Enumerate(Single<bool (const double&)>{}),          4);
 
-	EXPECT_EQ(2, cs.Enumerate(Double<void (const double&)>::SF));
-	EXPECT_EQ(4, cs.Enumerate(Double<bool (const double&)>::SF));
+	EXPECT_EQ(cs.Enumerate(Double<void (const double&)>::SF),        2);
+	EXPECT_EQ(cs.Enumerate(Double<bool (const double&)>::SF),        4);
 
-	EXPECT_EQ(2, cs.Enumerate(Double<void (const double&)>{}));
-	EXPECT_EQ(4, cs.Enumerate(Double<bool (const double&)>{}));
+	EXPECT_EQ(cs.Enumerate(Double<void (const double&)>{}),          2);
+	EXPECT_EQ(cs.Enumerate(Double<bool (const double&)>{}),          4);
 }
 
 
@@ -537,19 +537,19 @@ TEST(FunctionRef, FromFunction)
 		static int Fun() { return 123; }
 	};
 
-	{ BF::FunctionRef<int ()>                   f = &S::Fun;   EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int ()>                f; f = &S::Fun;   EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int () const>             f = &S::Fun;   EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int () const>          f; f = &S::Fun;   EXPECT_EQ(123, f()); }
+	{ BF::FunctionRef<int ()>                   f = &S::Fun;   EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int ()>                f; f = &S::Fun;   EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int () const>             f = &S::Fun;   EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int () const>          f; f = &S::Fun;   EXPECT_EQ(f(), 123); }
 //	{ BF::FunctionRef<int () noexcept>          f = &S::Fun; }		// [CompilationError]: This BF::FunctionRef can only point to 'noexcept' functions.
 //	{ BF::FunctionRef<int () noexcept>       f; f = &S::Fun; }		// [CompilationError]: This BF::FunctionRef can only point to 'noexcept' functions.
 //	{ BF::FunctionRef<int () const noexcept>    f = &S::Fun; }		// [CompilationError]: This BF::FunctionRef can only point to 'noexcept' functions.
 //	{ BF::FunctionRef<int () const noexcept> f; f = &S::Fun; }		// [CompilationError]: This BF::FunctionRef can only point to 'noexcept' functions.
 
-	{ BF::FunctionRef<int ()>                   f =  S::Fun;   EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int ()>                f; f =  S::Fun;   EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int () const>             f =  S::Fun;   EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int () const>          f; f =  S::Fun;   EXPECT_EQ(123, f()); }
+	{ BF::FunctionRef<int ()>                   f =  S::Fun;   EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int ()>                f; f =  S::Fun;   EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int () const>             f =  S::Fun;   EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int () const>          f; f =  S::Fun;   EXPECT_EQ(f(), 123); }
 //	{ BF::FunctionRef<int () noexcept>          f =  S::Fun; }		// [CompilationError]: This BF::FunctionRef can only point to 'noexcept' functions.
 //	{ BF::FunctionRef<int () noexcept>       f; f =  S::Fun; }		// [CompilationError]: This BF::FunctionRef can only point to 'noexcept' functions.
 //	{ BF::FunctionRef<int () const noexcept>    f =  S::Fun; }		// [CompilationError]: This BF::FunctionRef can only point to 'noexcept' functions.
@@ -559,23 +559,23 @@ TEST(FunctionRef, FromFunction)
 		static int Fun() noexcept { return 123; }
 	};
 
-	{ BF::FunctionRef<int ()>                   f = &SN::Fun;  EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int ()>                f; f = &SN::Fun;  EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int () const>             f = &SN::Fun;  EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int () const>          f; f = &SN::Fun;  EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int () noexcept>          f = &SN::Fun;  EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int () noexcept>       f; f = &SN::Fun;  EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int () const noexcept>    f = &SN::Fun;  EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int () const noexcept> f; f = &SN::Fun;  EXPECT_EQ(123, f()); }
+	{ BF::FunctionRef<int ()>                   f = &SN::Fun;  EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int ()>                f; f = &SN::Fun;  EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int () const>             f = &SN::Fun;  EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int () const>          f; f = &SN::Fun;  EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int () noexcept>          f = &SN::Fun;  EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int () noexcept>       f; f = &SN::Fun;  EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int () const noexcept>    f = &SN::Fun;  EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int () const noexcept> f; f = &SN::Fun;  EXPECT_EQ(f(), 123); }
 
-	{ BF::FunctionRef<int ()>                   f =  SN::Fun;  EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int ()>                f; f =  SN::Fun;  EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int () const>             f =  SN::Fun;  EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int () const>          f; f =  SN::Fun;  EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int () noexcept>          f =  SN::Fun;  EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int () noexcept>       f; f =  SN::Fun;  EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int () const noexcept>    f =  SN::Fun;  EXPECT_EQ(123, f()); }
-	{ BF::FunctionRef<int () const noexcept> f; f =  SN::Fun;  EXPECT_EQ(123, f()); }
+	{ BF::FunctionRef<int ()>                   f =  SN::Fun;  EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int ()>                f; f =  SN::Fun;  EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int () const>             f =  SN::Fun;  EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int () const>          f; f =  SN::Fun;  EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int () noexcept>          f =  SN::Fun;  EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int () noexcept>       f; f =  SN::Fun;  EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int () const noexcept>    f =  SN::Fun;  EXPECT_EQ(f(), 123); }
+	{ BF::FunctionRef<int () const noexcept> f; f =  SN::Fun;  EXPECT_EQ(f(), 123); }
 }
 
 
@@ -950,13 +950,13 @@ TEST(FunctionRef, ParameterPassing)
 	struct S2 { int operator()(Immobile& x)  { return x.value; } };
 	struct S3 { int operator()(Immobile&& x) { return x.value; } };
 
-	{ MoveOnly x = 123;       BF::FunctionRef<int (MoveOnly)>   f = &S::Fun1;  EXPECT_EQ(123, f(std::move(x))); }
-	{ Immobile x = 123;       BF::FunctionRef<int (Immobile&)>  f = &S::Fun2;  EXPECT_EQ(123, f(x));            }
-	{ Immobile x = 123;       BF::FunctionRef<int (Immobile&&)> f = &S::Fun3;  EXPECT_EQ(123, f(std::move(x))); }
+	{ MoveOnly x = 123;       BF::FunctionRef<int (MoveOnly)>   f = &S::Fun1;  EXPECT_EQ(f(std::move(x)), 123); }
+	{ Immobile x = 123;       BF::FunctionRef<int (Immobile&)>  f = &S::Fun2;  EXPECT_EQ(f(x),            123); }
+	{ Immobile x = 123;       BF::FunctionRef<int (Immobile&&)> f = &S::Fun3;  EXPECT_EQ(f(std::move(x)), 123); }
 
-	{ MoveOnly x = 123; S1 s; BF::FunctionRef<int (MoveOnly)>   f = s;         EXPECT_EQ(123, f(std::move(x))); }
-	{ Immobile x = 123; S2 s; BF::FunctionRef<int (Immobile&)>  f = s;         EXPECT_EQ(123, f(x));            }
-	{ Immobile x = 123; S3 s; BF::FunctionRef<int (Immobile&&)> f = s;         EXPECT_EQ(123, f(std::move(x))); }
+	{ MoveOnly x = 123; S1 s; BF::FunctionRef<int (MoveOnly)>   f = s;         EXPECT_EQ(f(std::move(x)), 123); }
+	{ Immobile x = 123; S2 s; BF::FunctionRef<int (Immobile&)>  f = s;         EXPECT_EQ(f(x),            123); }
+	{ Immobile x = 123; S3 s; BF::FunctionRef<int (Immobile&&)> f = s;         EXPECT_EQ(f(std::move(x)), 123); }
 
 	struct MoveCtorThrows {
 		MoveCtorThrows() = default;
@@ -1029,15 +1029,15 @@ TEST(FunctionRef, ConstCast)
 		const BF::FunctionRef<void () noexcept>       fn = c;
 		const BF::FunctionRef<void () const noexcept> fcn;
 
-		EXPECT_EQ(&f, &f.ConstCast());
+		EXPECT_EQ(&f.ConstCast(), &f);
 		f.ConstCast()();
-		EXPECT_EQ(1, c.count);
+		EXPECT_EQ(c.count, 1);
 
 		// fc.ConstCast();										// [CompilationError]: No need to cast away constness, 'operator()' is const.
 
-		EXPECT_EQ(&fn, &fn.ConstCast());
+		EXPECT_EQ(&fn.ConstCast(), &fn);
 		fn.ConstCast()();
-		EXPECT_EQ(2, c.count);
+		EXPECT_EQ(c.count, 2);
 
 		// fcn.ConstCast();										// [CompilationError]: No need to cast away constness, 'operator()' is const.
 	}
@@ -1075,23 +1075,23 @@ TEST(FunctionRef, ConstCastToSignature)
 		BF::FunctionRef<void (int&) noexcept>       fn  = fPtr;
 		BF::FunctionRef<void (int&) const noexcept> fcn = fPtr;
 
-		EXPECT_EQ(&f,   (void*) &f.ConstCast<void (const int&)>());
-		EXPECT_EQ(&fc,  (void*) &fc.ConstCast<void (const int&) const>());
-		EXPECT_EQ(&fn,  (void*) &fn.ConstCast<void (const int&) noexcept>());
-		EXPECT_EQ(&fcn, (void*) &fcn.ConstCast<void (const int&) const noexcept>());
+		EXPECT_EQ((void*) &f.ConstCast<void (const int&)>(),                  &f);
+		EXPECT_EQ((void*) &fc.ConstCast<void (const int&) const>(),           &fc);
+		EXPECT_EQ((void*) &fn.ConstCast<void (const int&) noexcept>(),        &fn);
+		EXPECT_EQ((void*) &fcn.ConstCast<void (const int&) const noexcept>(), &fcn);
 
 		int        i  = 0;
 		const int& ci = i;
 
-		f.ConstCast<void (const int&)>()(ci);								EXPECT_EQ(111, i);
-		fc.ConstCast<void (const int&) const>()(ci);						EXPECT_EQ(222, i);
-		fn.ConstCast<void (const int&) noexcept>()(ci);						EXPECT_EQ(333, i);
-		fcn.ConstCast<void (const int&) const noexcept>()(ci);				EXPECT_EQ(444, i);
+		f.ConstCast<void (const int&)>()(ci);								EXPECT_EQ(i, 111);
+		fc.ConstCast<void (const int&) const>()(ci);						EXPECT_EQ(i, 222);
+		fn.ConstCast<void (const int&) noexcept>()(ci);						EXPECT_EQ(i, 333);
+		fcn.ConstCast<void (const int&) const noexcept>()(ci);				EXPECT_EQ(i, 444);
 
-		std::move(f).ConstCast<void (const int&)>()(ci);					EXPECT_EQ(555, i);
-		std::move(fc).ConstCast<void (const int&) const>()(ci);				EXPECT_EQ(666, i);
-		std::move(fn).ConstCast<void (const int&) noexcept>()(ci);			EXPECT_EQ(777, i);
-		std::move(fcn).ConstCast<void (const int&) const noexcept>()(ci);	EXPECT_EQ(888, i);
+		std::move(f).ConstCast<void (const int&)>()(ci);					EXPECT_EQ(i, 555);
+		std::move(fc).ConstCast<void (const int&) const>()(ci);				EXPECT_EQ(i, 666);
+		std::move(fn).ConstCast<void (const int&) noexcept>()(ci);			EXPECT_EQ(i, 777);
+		std::move(fcn).ConstCast<void (const int&) const noexcept>()(ci);	EXPECT_EQ(i, 888);
 	}
 
 	{
@@ -1106,9 +1106,9 @@ TEST(FunctionRef, ConstCastToSignature)
 
 		vec.Enumerate([] (double& item) { item = 1.0; });
 
-		EXPECT_EQ(1.0, vec[0]);
-		EXPECT_EQ(1.0, vec[1]);
-		EXPECT_EQ(1.0, vec[2]);
+		EXPECT_EQ(vec[0], 1.0);
+		EXPECT_EQ(vec[1], 1.0);
+		EXPECT_EQ(vec[2], 1.0);
 	}
 
 //	BF::FunctionRef<void ()>{}.ConstCast<void () &>();			// [CompilationError]: 'Signature' must be a function type in the form 'Ret (Pars...) [const] [noexcept]'.
@@ -1138,11 +1138,11 @@ TEST(FunctionRef, DeductionGuide)
 		int  mVar;
 	};
 
-	{ BF::FunctionRef f = &S::Fun;  EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()         >>); }
-	{ BF::FunctionRef f =  S::Fun;  EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()         >>); }
+	{ BF::FunctionRef f = &S::Fun;  EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()         >>); }
+	{ BF::FunctionRef f =  S::Fun;  EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()         >>); }
 
-	{ BF::FunctionRef f = &S::FunN; EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () noexcept>>); }
-	{ BF::FunctionRef f =  S::FunN; EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () noexcept>>); }
+	{ BF::FunctionRef f = &S::FunN; EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () noexcept>>); }
+	{ BF::FunctionRef f =  S::FunN; EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () noexcept>>); }
 
 //	{ BF::FunctionRef f = &S::Overloaded; }		// [CompilationError]: cannot deduce template arguments
 //	{ BF::FunctionRef f =  S::Overloaded; }		// [CompilationError]: cannot deduce template arguments
@@ -1172,30 +1172,30 @@ TEST(FunctionRef, DeductionGuide)
 	struct VRRN  : FunctorArchetype { int operator()() volatile&&       noexcept { return 123; } };
 	struct CVRRN : FunctorArchetype { int operator()() const volatile&& noexcept { return 123; } };
 
-	{ X     s; BF::FunctionRef f = s;            EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()               >>); }
-	{ C     s; BF::FunctionRef f = s;            EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const         >>); }
-	{ V     s; BF::FunctionRef f = s;            EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()               >>); }
-	{ CV    s; BF::FunctionRef f = s;            EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const         >>); }
-	{ R     s; BF::FunctionRef f = s;            EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()               >>); }
-	{ CR    s; BF::FunctionRef f = s;            EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const         >>); }
-	{ VR    s; BF::FunctionRef f = s;            EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()               >>); }
-	{ CVR   s; BF::FunctionRef f = s;            EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const         >>); }
-	{ RR    s; BF::FunctionRef f = std::move(s); EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()               >>); }
-	{ CRR   s; BF::FunctionRef f = std::move(s); EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const         >>); }
-	{ VRR   s; BF::FunctionRef f = std::move(s); EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()               >>); }
-	{ CVRR  s; BF::FunctionRef f = std::move(s); EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const         >>); }
-	{ N     s; BF::FunctionRef f = s;            EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()       noexcept>>); }
-	{ CN    s; BF::FunctionRef f = s;            EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const noexcept>>); }
-	{ VN    s; BF::FunctionRef f = s;            EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()       noexcept>>); }
-	{ CVN   s; BF::FunctionRef f = s;            EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const noexcept>>); }
-	{ RN    s; BF::FunctionRef f = s;            EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()       noexcept>>); }
-	{ CRN   s; BF::FunctionRef f = s;            EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const noexcept>>); }
-	{ VRN   s; BF::FunctionRef f = s;            EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()       noexcept>>); }
-	{ CVRN  s; BF::FunctionRef f = s;            EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const noexcept>>); }
-	{ RRN   s; BF::FunctionRef f = std::move(s); EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()       noexcept>>); }
-	{ CRRN  s; BF::FunctionRef f = std::move(s); EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const noexcept>>); }
-	{ VRRN  s; BF::FunctionRef f = std::move(s); EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()       noexcept>>); }
-	{ CVRRN s; BF::FunctionRef f = std::move(s); EXPECT_EQ(123, f()); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const noexcept>>); }
+	{ X     s; BF::FunctionRef f = s;            EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()               >>); }
+	{ C     s; BF::FunctionRef f = s;            EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const         >>); }
+	{ V     s; BF::FunctionRef f = s;            EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()               >>); }
+	{ CV    s; BF::FunctionRef f = s;            EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const         >>); }
+	{ R     s; BF::FunctionRef f = s;            EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()               >>); }
+	{ CR    s; BF::FunctionRef f = s;            EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const         >>); }
+	{ VR    s; BF::FunctionRef f = s;            EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()               >>); }
+	{ CVR   s; BF::FunctionRef f = s;            EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const         >>); }
+	{ RR    s; BF::FunctionRef f = std::move(s); EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()               >>); }
+	{ CRR   s; BF::FunctionRef f = std::move(s); EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const         >>); }
+	{ VRR   s; BF::FunctionRef f = std::move(s); EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()               >>); }
+	{ CVRR  s; BF::FunctionRef f = std::move(s); EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const         >>); }
+	{ N     s; BF::FunctionRef f = s;            EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()       noexcept>>); }
+	{ CN    s; BF::FunctionRef f = s;            EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const noexcept>>); }
+	{ VN    s; BF::FunctionRef f = s;            EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()       noexcept>>); }
+	{ CVN   s; BF::FunctionRef f = s;            EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const noexcept>>); }
+	{ RN    s; BF::FunctionRef f = s;            EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()       noexcept>>); }
+	{ CRN   s; BF::FunctionRef f = s;            EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const noexcept>>); }
+	{ VRN   s; BF::FunctionRef f = s;            EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()       noexcept>>); }
+	{ CVRN  s; BF::FunctionRef f = s;            EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const noexcept>>); }
+	{ RRN   s; BF::FunctionRef f = std::move(s); EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()       noexcept>>); }
+	{ CRRN  s; BF::FunctionRef f = std::move(s); EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const noexcept>>); }
+	{ VRRN  s; BF::FunctionRef f = std::move(s); EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int ()       noexcept>>); }
+	{ CVRRN s; BF::FunctionRef f = std::move(s); EXPECT_EQ(f(), 123); static_assert(std::is_same_v<decltype(f), BF::FunctionRef<int () const noexcept>>); }
 
 	struct Zero {};
 

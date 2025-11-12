@@ -162,18 +162,18 @@ TEST(TestUtils, MemsetValue)
 	TestType& value = reinterpret_cast<TestType&>(buffer);
 
 	::new (buffer) TestType(123);
-	EXPECT_EQ(123, value.GetL());
-	EXPECT_EQ(123, value.GetCL());
-	EXPECT_EQ(123, value.GetVL());
-	EXPECT_EQ(123, value.GetCVL());
-	EXPECT_EQ(123, value.GetR());
-	EXPECT_EQ(123, value.GetCR());
-	EXPECT_EQ(123, value.GetVR());
-	EXPECT_EQ(123, value.GetCVR());
+	EXPECT_EQ(value.GetL(),   123);
+	EXPECT_EQ(value.GetCL(),  123);
+	EXPECT_EQ(value.GetVL(),  123);
+	EXPECT_EQ(value.GetCVL(), 123);
+	EXPECT_EQ(value.GetR(),   123);
+	EXPECT_EQ(value.GetCR(),  123);
+	EXPECT_EQ(value.GetVR(),  123);
+	EXPECT_EQ(value.GetCVR(), 123);
 	value.~TestType();
 
 	for (const UChar c : buffer)
-		EXPECT_EQ(0xBB, c);
+		EXPECT_EQ(c, 0xBB);
 
 	static_assert(std::is_base_of_v<BF::ImmobileClass, TestType>);
 

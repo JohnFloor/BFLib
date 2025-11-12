@@ -17,14 +17,14 @@ static void TestGenPtr()
 
 	genPtr = testPtr;
 
-	EXPECT_EQ(testPtr, genPtr.AsPtr<Type>());
-	EXPECT_EQ(testPtr, &BF::LVal(genPtr.AsRef<Type>()));
-	EXPECT_EQ(testPtr, &BF::LVal(genPtr.AsRef<Type&>()));
-	EXPECT_EQ(testPtr, &BF::LVal(genPtr.AsRef<Type&&>()));
+	EXPECT_EQ(genPtr.AsPtr<Type>(),              testPtr);
+	EXPECT_EQ(&BF::LVal(genPtr.AsRef<Type>()),   testPtr);
+	EXPECT_EQ(&BF::LVal(genPtr.AsRef<Type&>()),  testPtr);
+	EXPECT_EQ(&BF::LVal(genPtr.AsRef<Type&&>()), testPtr);
 
 	genPtr = (Type*)nullptr;
 
-	EXPECT_EQ(nullptr, genPtr.AsPtr<Type>());
+	EXPECT_EQ(genPtr.AsPtr<Type>(), nullptr);
 	EXPECT_TRUE(BF::IsNullReference(genPtr.AsRef<Type>()));
 	EXPECT_TRUE(BF::IsNullReference(genPtr.AsRef<Type&>()));
 	EXPECT_TRUE(BF::IsNullReference(genPtr.AsRef<Type&&>()));
@@ -56,7 +56,7 @@ TEST(RawMemory, GenPtr)
 {
 	BF::GenPtr genPtr;
 	genPtr = BF::Bad;
-	EXPECT_EQ(BF::BadValuePtr, (UIntPtr&)genPtr);
+	EXPECT_EQ((UIntPtr&)genPtr, BF::BadValuePtr);
 
 	enum E;
 	enum class EC;
@@ -106,8 +106,8 @@ TEST(RawMemory, AsByteArray)
 	static_assert(std::is_same_v<decltype(BF::AsByteArray(testObj)),        BA&>);
 	static_assert(std::is_same_v<decltype(BF::AsByteArray(cTestObj)), const BA&>);
 
-	EXPECT_EQ(&reinterpret_cast<BA&>(testObj),        &BF::AsByteArray(testObj));
-	EXPECT_EQ(&reinterpret_cast<const BA&>(cTestObj), &BF::AsByteArray(cTestObj));
+	EXPECT_EQ(&BF::AsByteArray(testObj),  &reinterpret_cast<BA&>(testObj));
+	EXPECT_EQ(&BF::AsByteArray(cTestObj), &reinterpret_cast<const BA&>(cTestObj));
 }
 
 
@@ -178,12 +178,12 @@ TEST(RawMemory, SecureMemset)
 {
 	char oneChar = 123;
 	BF::SecureMemset(&oneChar, 124, 0);
-	EXPECT_EQ(123, oneChar);
+	EXPECT_EQ(oneChar, 123);
 
 	char buffer[4] = {};
 	BF::SecureMemset(buffer, 0xC5, sizeof(buffer));
 	for (const UChar c : buffer)
-		EXPECT_EQ(0xC5, c);
+		EXPECT_EQ(c, 0xC5);
 
 	const double duration = BF::MeasureDuration([] {
 		char buffer[1024];

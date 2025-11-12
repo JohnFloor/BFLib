@@ -171,7 +171,7 @@ TEST(StdFunctionDemo, FromOverloaded)
 {
 	using Doub = Double<int (), int (bool)>;
 
-	// It's not possible to infer the template argument of the templated ctor./assignment from an 'oveloaded-function'.
+	// It's not possible to infer the template argument of the templated ctor./assignment from an 'overloaded-function'.
 	// The 'auto' example below works the same way, and it also doesn't compile.
 
 //	{ std::function<int ()>    f = &Doub::SF; }			// error

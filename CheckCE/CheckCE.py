@@ -91,10 +91,6 @@ def ExitErrorTechnical(message: str) -> None:
 	Exit()
 
 
-def IsRoot(path: Path) -> bool:
-	return path.is_absolute() and path.anchor == str(path)
-
-
 def IsCppExt(path: Path) -> bool:
 	return path.suffix.lower() == cCppExt
 

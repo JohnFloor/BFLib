@@ -5,7 +5,7 @@ Checks `[CompilationError]` tags in .cpp files.
 
 ## Usage
 
-```sh
+```txt
 CheckCE.py
 CheckCE.py path
 CheckCE.py path solution_conf
@@ -29,7 +29,7 @@ more than one .vcxproj file. It must be the same directory or a child of the sol
 
 ## Print help
 
-```sh
+```txt
 CheckCE.py /?
 ```
 

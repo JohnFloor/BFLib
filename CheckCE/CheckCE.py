@@ -11,8 +11,9 @@ from typing import Optional
 from concurrent.futures import ThreadPoolExecutor
 
 
-argPath                 = Path(sys.argv[1] if len(sys.argv) >= 2 else ".").resolve()
-argSolutionConf         =      sys.argv[2] if len(sys.argv) >= 3 else "Debug"
+argPath                 = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
+argSolutionConf         =      sys.argv[2] if len(sys.argv) > 2 else "Debug"
+argNWorkerThreads       =      sys.argv[3] if len(sys.argv) > 3 else "10"
 
 cScriptName             = Path(sys.argv[0]).stem
 
@@ -41,11 +42,16 @@ def PrintUsage() -> None:
 	print(f"Checks '{cCompilationErrorTagLog}' tags in .cpp files.")
 	print(r"")
 	print(r"Usage:")
-	print(f"    {cScriptName}.py [path [solution_conf]]")
-	print(r"        path:          A directory or a single .cpp file to process.")
-	print(r"                       Default value: '.' (the current directory).")
-	print(r"        solution_conf: A solution configuration. Must be present in the .sln file.")
-	print(r"                       Default value: 'Debug'.")
+	print(f"    {cScriptName}.py")
+	print(f"    {cScriptName}.py path")
+	print(f"    {cScriptName}.py path solution_conf")
+	print(f"    {cScriptName}.py path solution_conf n_worker_threads")
+	print(r"        path:             A directory or a single .cpp file to process.")
+	print(r"                          Default value: '.' (the current directory).")
+	print(r"        solution_conf:    A solution configuration. Must be present in the .sln file.")
+	print(r"                          Default value: 'Debug'.")
+	print(r"        n_worker_threads: Number of worker threads to use for the check, between 1-20.")
+	print(r"                          Default value: '10'.")
 	print(r"")
 	print(r"    The .sln file will be searched in the following directories: path, path\.., path\..\.., etc.")
 	print(r"    The search stops at the first match. It is an error if that directory contains more than one .sln file.")
@@ -164,6 +170,18 @@ def GetSmallestCppFile(directory: Path) -> Optional[Path]:
 				smallestPath = path
 
 	return smallestPath
+
+
+def ConvertArgNWorkerThreads() -> None:
+	AssertIsSingleThreadedCode()		# because it may terminate the program
+
+	try:
+		global argNWorkerThreads
+		argNWorkerThreads = int(argNWorkerThreads)
+		if argNWorkerThreads < 1 or argNWorkerThreads > 20:
+			ExitErrorTechnical(f"The given number of worker threads '{argNWorkerThreads}' is out of range. Should be between 1-20.")
+	except ValueError:
+		ExitErrorTechnical(f"The given number of worker threads '{argNWorkerThreads}' is not an integer.")
 
 
 def FindSolutionDir(startDir: Path) -> Path:
@@ -376,8 +394,10 @@ if len(sys.argv) == 2 and sys.argv[1] == "/?":
 	PrintUsage()
 	sys.exit()
 
-if len(sys.argv) > 3:
+if len(sys.argv) > 4:
 	ExitErrorTechnical("Too many arguments.")
+
+ConvertArgNWorkerThreads()
 
 if argPath.is_dir():
 	pass
@@ -391,7 +411,7 @@ ChangeTerminalToUtf8()
 developerEnv   = GetDeveloperEnv()
 compileOneFile = GetCompileFunction(GetDirFromFile(argPath), developerEnv)
 
-with ThreadPoolExecutor(max_workers = 10) as pool:
+with ThreadPoolExecutor(max_workers = argNWorkerThreads) as pool:
 	if argPath.is_dir():
 		for path in argPath.rglob("*" + cCppExt):
 			if path.is_file():

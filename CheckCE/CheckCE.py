@@ -2,16 +2,21 @@ import re
 import os
 import sys
 import subprocess
+import time
+import threading
 from pathlib import Path
 from subprocess import CompletedProcess
 from typing import Callable
 from typing import Optional
+from concurrent.futures import ThreadPoolExecutor
 
 
 argPath                 = Path(sys.argv[1] if len(sys.argv) >= 2 else ".").resolve()
 argSolutionConf         =      sys.argv[2] if len(sys.argv) >= 3 else "Debug"
 
 cScriptName             = Path(sys.argv[0]).stem
+
+cStartTime              = time.perf_counter_ns()
 
 gError                  = None
 cErrorFailed            = 1
@@ -23,9 +28,13 @@ cCompilationErrorTagLog = "[CompilationError-*]"
 reInvalidConf           = re.compile(r'error MSB4126: The specified solution configuration ".*\|.*" is invalid.')
 reClExe                 = re.compile(r"\bCL\.exe\b", re.IGNORECASE)
 reClExeFullPath         = re.compile(r"(^.*\bCL\.exe\b)", re.IGNORECASE)
+rePDBSwitches           = re.compile(r"/Z[7iI] ")
 reCompilationErrorTag   = re.compile(r"\[CompilationError(?:-(\w*))?\]")
 reCompilationErrorLine  = re.compile(r"(\s*)//([^/])(.*[^/]//\s*" + reCompilationErrorTag.pattern + r":" + r"\s*(.*\S)\s*)")
 reDiagnosticStart       = re.compile(r"^..[^:]*\([0-9,]+\): [a-z ]+ [A-Z]+\d+: ")
+
+gLoggedTitles           = set()				# the titles that have been already logged
+gPrintLock              = threading.Lock()	# one common lock for printing, using 'gError' and 'gLoggedTitles'
 
 
 def PrintUsage() -> None:
@@ -55,6 +64,38 @@ def PrintUsage() -> None:
 	print(r"    2: Technical error (e.g. directory/file does not exist).")
 
 
+def QR(dividend: int, divisor: int) -> tuple[int, int]:
+	return dividend // divisor, dividend % divisor
+
+
+def AssertIsSingleThreadedCode() -> None:
+	assert threading.current_thread() is threading.main_thread(), "This function should be called from the main thread."
+	assert len(threading.enumerate()) == 1, "Only the main thread should run, when this function is called."
+
+
+def Exit():
+	AssertIsSingleThreadedCode()		# because it may terminate the program
+
+	elapsedTime = time.perf_counter_ns() - cStartTime
+	hours,   r1 = QR(elapsedTime, 1000_000_000 * 60 * 60)
+	minutes, r2 = QR(r1,          1000_000_000 * 60)
+	seconds     =    r2     /     1000_000_000
+	print("")
+	print(f"Time Elapsed {hours:02d}:{minutes:02d}:{seconds:05.2f}")
+
+	if gError is None:
+		sys.exit(0)
+	else:
+		sys.exit(gError)
+
+
+def GetDirFromFile(path: Path) -> Path:
+	if path.is_file():
+		return path.parent
+	else:
+		return path
+
+
 def PrintToStdErr(s: str) -> None:
 	sys.stdout.flush()
 	sys.stderr.flush()
@@ -63,32 +104,41 @@ def PrintToStdErr(s: str) -> None:
 	sys.stderr.flush()
 
 
-def PrintErrorTechnical(message: str) -> None:
+def ExitErrorTechnical(message: str) -> None:
+	AssertIsSingleThreadedCode()		# because it may terminate the program
+
 	global gError
 	PrintToStdErr(f"ERROR: {message}")
 	assert gError is None or gError == cErrorTechnical, f"gError should be None or cErrorTechnical."
 	gError = cErrorTechnical
 
-
-def PrintErrorFailed(file: Path, lineInd: int, tag: str, message: str) -> None:
-	assert tag in ("error", "warning", "message"), f"Unrecognized tag '{tag}'."
-
-	global gError
-	PrintToStdErr(f"{file}({lineInd + 1}): {tag:7}: {message}")
-	assert gError is None or gError == cErrorFailed, f"gError should be None or cErrorFailed."
-	gError = cErrorFailed
-
-
-def Exit():
-	if gError is None:
-		sys.exit(0)
-	else:
-		sys.exit(gError)
-
-
-def ExitErrorTechnical(message: str) -> None:
-	PrintErrorTechnical(message)
 	Exit()
+
+
+def PrintErrorFailed(file: Path, lineInd: int, tag: str, message: str, *args) -> None:
+	assert len(args) % 4 == 0, "The number of arguments has to be a multiple of 4."
+
+	def PrintOneError(file: Path, lineInd: int, tag: str, message: str) -> None:
+		assert tag in ("error", "warning", "message"), f"Unrecognized tag '{tag}'."
+		PrintToStdErr(f"{file}({lineInd + 1}): {tag:7}: {message}")
+
+	with gPrintLock:
+		PrintOneError(file, lineInd, tag, message)
+		for i in range(0, len(args), 4):
+			file, lineInd, tag, message = args[i : i + 4]
+			PrintOneError(file, lineInd, tag, message)
+
+		global gError
+		assert gError is None or gError == cErrorFailed, f"gError should be None or cErrorFailed."
+		gError = cErrorFailed
+
+
+def PrintTitle(path: Path) -> None:
+	title = str(path.relative_to(GetDirFromFile(argPath)))
+	with gPrintLock:
+		if title not in gLoggedTitles:
+			print(f"    Processing {title}...")
+			gLoggedTitles.add(title)
 
 
 def IsCppExt(path: Path) -> bool:
@@ -116,14 +166,8 @@ def GetSmallestCppFile(directory: Path) -> Optional[Path]:
 	return smallestPath
 
 
-def GetDirFromFile(path: Path) -> Path:
-	if path.is_file():
-		return path.parent
-	else:
-		return path
-
-
 def FindSolutionDir(startDir: Path) -> Path:
+	AssertIsSingleThreadedCode()		# because it may terminate the program
 	assert startDir.is_dir(), f"'{startDir}' should be a directory."
 
 	for d in [startDir] + list(startDir.parents):
@@ -137,6 +181,7 @@ def FindSolutionDir(startDir: Path) -> Path:
 
 
 def FindProjectDir(startDir: Path, solutionDir: Path) -> Path:
+	AssertIsSingleThreadedCode()		# because it may terminate the program
 	assert startDir.is_dir(), f"'{startDir}' should be a directory."
 	assert solutionDir.is_dir(), f"'{solutionDir}' should be a directory."
 	assert startDir.is_relative_to(solutionDir), f"'{startDir}' must be in '{solutionDir}' (descendant-or-self)."
@@ -163,6 +208,8 @@ def TouchExistingFile(file: Path) -> None:
 
 
 def TouchSmallestCppFile(directory: Path) -> None:
+	AssertIsSingleThreadedCode()		# because it may terminate the program
+
 	smallestPath = GetSmallestCppFile(directory)
 	if smallestPath is None:
 		ExitErrorTechnical(f"No .cpp file in directory '{directory}'.")
@@ -219,6 +266,8 @@ def BuildSolution(solutionDir: Path, mode: str) -> CompletedProcess:
 
 
 def GetCompileFunction(dirToTouch: Path, developerEnv: dict[str, str]) -> Callable[[Path], CompletedProcess]:
+	AssertIsSingleThreadedCode()		# because it may terminate the program
+
 	solutionDir = FindSolutionDir(dirToTouch)
 	projectDir  = FindProjectDir(dirToTouch, solutionDir)
 
@@ -243,6 +292,7 @@ def GetCompileFunction(dirToTouch: Path, developerEnv: dict[str, str]) -> Callab
 	assert not clExe.startswith("\""), "The CL.exe call should not start with \"."
 	clExe = reClExeFullPath.sub(r'"\1"', clExe)		# put the full path to CL.exe into ""
 	clExe = GetCppReAtEnd(clExe).sub("", clExe)		# remove Something.cpp or "Some thing.cpp" at the end, space remains
+	clExe = rePDBSwitches.sub("", clExe)			# don't generate PDB either into the .obj file or into a .pdb file
 	clExe += "/Zs"									# syntax check only, no output files will be created
 
 	def CompileOneFile(path: Path) -> CompletedProcess:
@@ -257,6 +307,8 @@ def ProcessCompilationErrorTag(path: Path, compileOneFile: Callable[[Path], Comp
 	taggedLine = lines[lineInd]
 	tagOccurrences = len(re.findall(reCompilationErrorTag, taggedLine))
 	assert tagOccurrences >= 1, f"'{cCompilationErrorTagLog}' should occur on the tagged line."
+
+	PrintTitle(path)
 
 	if tagOccurrences > 1:
 		PrintErrorFailed(path, lineInd, "error", f"'{cCompilationErrorTagLog}' occurs more than once on the line.")
@@ -294,24 +346,28 @@ def ProcessCompilationErrorTag(path: Path, compileOneFile: Callable[[Path], Comp
 		clDiagnosticLine = cl.stdout.splitlines()[1]
 		clDiagnostic     = reDiagnosticStart.sub("", clDiagnosticLine)
 		if expectedDiagnostic not in clDiagnostic:
-			PrintErrorFailed(path, lineInd, "error",   f"Expected diagnostic [{expectedDiagnostic}] not found.")
-			PrintErrorFailed(path, lineInd, "message", f"Actual diagnostic: {clDiagnostic}")
+			PrintErrorFailed(path, lineInd, "error",   f"Expected diagnostic [{expectedDiagnostic}] not found.",
+							 path, lineInd, "message", f"Actual diagnostic: {clDiagnostic}")
 			return
 	finally:
 		outPath.unlink()
 
 
-def ProcessCppFile(path: Path, compileOneFile: Callable[[Path], CompletedProcess]) -> None:
+def ProcessCppFile(pool: ThreadPoolExecutor, path: Path, compileOneFile: Callable[[Path], CompletedProcess]) -> None:
 	assert path.is_file()
 	assert IsCppExt(path)
 
-	print(f"    Processing {path.relative_to(GetDirFromFile(argPath))}...")
-
 	lines = path.read_text(encoding = "utf-8").splitlines(keepends = True)
+
+	foundTag = False
 
 	for i in range(len(lines)):
 		if re.search(reCompilationErrorTag, lines[i]):
-			ProcessCompilationErrorTag(path, compileOneFile, lines, i)
+			pool.submit(ProcessCompilationErrorTag, path, compileOneFile, lines, i)
+			foundTag = True
+
+	if not foundTag:
+		pool.submit(PrintTitle, path)
 
 
 # === Main =============================================================================================================
@@ -332,14 +388,15 @@ else:
 	ExitErrorTechnical(f"The path '{argPath}' is not an existing directory or file.")
 
 ChangeTerminalToUtf8()
-developerEnv = GetDeveloperEnv()
+developerEnv   = GetDeveloperEnv()
 compileOneFile = GetCompileFunction(GetDirFromFile(argPath), developerEnv)
 
-if argPath.is_dir():
-	for path in argPath.rglob("*" + cCppExt):
-		if path.is_file():
-			ProcessCppFile(path, compileOneFile)
-elif argPath.is_file():
-	ProcessCppFile(argPath, compileOneFile)
+with ThreadPoolExecutor(max_workers = 10) as pool:
+	if argPath.is_dir():
+		for path in argPath.rglob("*" + cCppExt):
+			if path.is_file():
+				ProcessCppFile(pool, path, compileOneFile)
+	elif argPath.is_file():
+		ProcessCppFile(pool, argPath, compileOneFile)
 
 Exit()

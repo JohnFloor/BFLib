@@ -62,6 +62,7 @@ int main() {
 
 The above wouldn't work with a standard function wrapper or view, because the 2<sup>nd</sup> call would be ambiguous, and the 4<sup>th</sup> would surprisingly call the 1<sup>st</sup> candidate.
 
+
 ### Const-correctness
 
 `BF::FunctionRef` forwards the `const` qualifier of its signature template parameter to the call operator. E.g.,

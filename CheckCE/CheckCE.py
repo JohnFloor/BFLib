@@ -125,7 +125,7 @@ def PrintErrorFailed(file: Path, lineInd: int, tag: str, message: str, *args) ->
 	assert len(args) % 4 == 0, "The number of arguments has to be a multiple of 4."
 
 	def PrintOneError(file: Path, lineInd: int, tag: str, message: str) -> None:
-		assert tag in ("error", "warning", "message"), f"Unrecognized tag '{tag}'."
+		assert tag in ("error", "warning", "message"), f"Unrecognized tag value '{tag}'."
 		PrintToStdErr(f"{file}({lineInd + 1}): {tag:7}: {message}")
 
 	with gPrintLock:
@@ -202,7 +202,7 @@ def FindProjectDir(startDir: Path, solutionDir: Path) -> Path:
 	AssertIsSingleThreadedCode()		# because it may terminate the program
 	assert startDir.is_dir(), f"'{startDir}' should be a directory."
 	assert solutionDir.is_dir(), f"'{solutionDir}' should be a directory."
-	assert startDir.is_relative_to(solutionDir), f"'{startDir}' must be in '{solutionDir}' (descendant-or-self)."
+	assert startDir.is_relative_to(solutionDir), f"'{startDir}' should be in '{solutionDir}' (descendant-or-self)."
 
 	d = startDir
 	while True:
@@ -218,7 +218,7 @@ def FindProjectDir(startDir: Path, solutionDir: Path) -> Path:
 			break
 		d = d.parent
 
-	ExitErrorTechnical(f"No .vcxproj file found from '{startDir}' to '{solutionDir}'.")
+	ExitErrorTechnical(f"No .vcxproj file found while walking up from '{startDir}' to '{solutionDir}'.")
 
 
 def TouchExistingFile(file: Path) -> None:
@@ -238,7 +238,7 @@ def RunSubprocess(commandLine:      str | list[str],
 				  workingDirectory: Path = None,
 				  inShell:          str = "NoShell",
 				  environment:      dict[str, str] = None) -> CompletedProcess:
-	assert inShell in ("NoShell", "InShell"), "Unrecognized 'inShell' value."
+	assert inShell in ("NoShell", "InShell"), f"Unrecognized inShell value '{inShell}'."
 
 	return subprocess.run(commandLine,
 						  cwd            = workingDirectory,
@@ -275,7 +275,7 @@ def BuildSolution(solutionDir: Path, mode: str) -> CompletedProcess:
 	match mode:
 		case "Full":    pass
 		case "JustObj": commandLine.append("/t:ClCompile")
-		case _:         assert False, "Unrecognized 'mode' argument."
+		case _:         assert False, f"Unrecognized mode value '{mode}'."
 
 	return RunSubprocess(commandLine, solutionDir)
 	# {return value}.stdout: all output goes here, its type is 'str'
@@ -294,7 +294,7 @@ def GetCompileFunction(dirToTouch: Path, developerEnv: dict[str, str]) -> Callab
 		if re.search(reInvalidConf, bsFull.stdout):
 			ExitErrorTechnical(f"The solution does not contain '{argSolutionConf}' as a solution configuration.")
 		else:
-			ExitErrorTechnical("The solution should build successfully.")
+			ExitErrorTechnical("The solution did not build successfully.")
 
 	TouchSmallestCppFile(dirToTouch)
 	bsJustObj = BuildSolution(solutionDir, "JustObj")
@@ -315,7 +315,7 @@ def GetCompileFunction(dirToTouch: Path, developerEnv: dict[str, str]) -> Callab
 
 	def CompileOneFile(path: Path) -> CompletedProcess:
 		assert path.is_absolute(), f"'{path}' should be absolute."
-		assert path.is_relative_to(projectDir), f"'{path}' must be in '{projectDir}' (descendant-or-self)."
+		assert path.is_relative_to(projectDir), f"'{path}' should be in '{projectDir}' (descendant-or-self)."
 		return RunSubprocess(f"{clExe} \"{path.relative_to(projectDir)}\"", projectDir, "NoShell", developerEnv)
 
 	return CompileOneFile
@@ -385,8 +385,8 @@ def ProcessCompilationErrorTag(path: Path, compileOneFile: Callable[[Path], Comp
 
 
 def ProcessCppFile(pool: ThreadPoolExecutor, path: Path, compileOneFile: Callable[[Path], CompletedProcess]) -> None:
-	assert path.is_file()
-	assert IsCppExt(path)
+	assert path.is_file(), f"'{path}' should be an existing file."
+	assert IsCppExt(path), f"'{path}' should have '.cpp' extension."
 
 	lines = path.read_text(encoding = "utf-8").splitlines(keepends = True)
 
@@ -416,7 +416,7 @@ if argPath.is_dir():
 	pass
 elif argPath.is_file():
 	if not IsCppExt(argPath):
-		ExitErrorTechnical(f"The specified file '{argPath}' should be a .cpp file.")
+		ExitErrorTechnical(f"The specified file '{argPath}' is not a .cpp file.")
 else:
 	ExitErrorTechnical(f"The path '{argPath}' is not an existing directory or file.")
 

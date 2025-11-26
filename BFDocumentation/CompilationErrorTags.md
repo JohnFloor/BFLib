@@ -26,7 +26,10 @@ BF::FunctionRef<void ()> f;
 then
 
 - the file is expected not to compile, and
-- the first diagnostic message is expected to contain the string after the tag (verbatim).
+- the first diagnostic is expected to be an `error` (not `fatal error` or `warning`), and
+- the first diagnostic is expected to contain the string after the tag, verbatim.
+
+Note, that compilation can succeed (`cl.exe`'s exit code is `0`) with warnings on stdout.
 
 
 ## The <code>[CompilationError-<i>SolutionConf</i>]</code> tag

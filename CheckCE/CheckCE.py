@@ -32,7 +32,7 @@ reClExeFullPath         = re.compile(r"(^.*\bCL\.exe\b)", re.IGNORECASE)
 rePDBSwitches           = re.compile(r"/Z[7iI] ")
 reCompilationErrorTag   = re.compile(r"\[CompilationError(?:-(\w*))?\]")
 reCompilationErrorLine  = re.compile(r"(\s*)//([^/])(.*[^/]//\s*" + reCompilationErrorTag.pattern + r":" + r"\s*(.*\S)\s*)")
-reDiagnosticStart       = re.compile(r"^..[^:]*\([0-9,]+\): [a-z ]+ [A-Z]+\d+: ")
+reDiagnosticLine        = re.compile(r"^..[^:]*\([0-9,]+\): ([a-z ]+) [A-Z]+\d+: (.*)")
 
 gLoggedTitles           = set()				# the titles that have been already logged
 gPrintLock              = threading.Lock()	# one common lock for printing, using 'gError' and 'gLoggedTitles'
@@ -358,14 +358,27 @@ def ProcessCompilationErrorTag(path: Path, compileOneFile: Callable[[Path], Comp
 
 		cl = compileOneFile(outPath)
 		if cl.returncode == 0:
-			PrintErrorFailed(path, lineInd, "error", "Compilation succeeded.")
+			PrintErrorFailed(path, lineInd, "error", "Compilation succeeded.")			# 'cl.stdout' can have warnings
 			return
 
-		clDiagnosticLine = cl.stdout.splitlines()[1]
-		clDiagnostic     = reDiagnosticStart.sub("", clDiagnosticLine)
-		if expectedDiagnostic not in clDiagnostic:
-			PrintErrorFailed(path, lineInd, "error",   f"Expected diagnostic [{expectedDiagnostic}] not found.",
+		clDiagnosticLine = cl.stdout.splitlines()[1]									# 0th line is the name of the .cpp
+
+		mo = re.fullmatch(reDiagnosticLine, clDiagnosticLine)
+		assert mo is not None, "Unrecognized diagnostic line format."
+
+		clDiagnosticType = mo.group(1)
+		clDiagnostic     = mo.group(2)
+
+		if clDiagnosticType != "error":
+			PrintErrorFailed(path, lineInd, "error",   f"The first diagnostic is a {clDiagnosticType}.",
+							 path, lineInd, "message", f"Expected error:    {expectedDiagnostic}",
 							 path, lineInd, "message", f"Actual diagnostic: {clDiagnostic}")
+			return
+
+		if expectedDiagnostic not in clDiagnostic:
+			PrintErrorFailed(path, lineInd, "error",   f"Expected error not found.",
+							 path, lineInd, "message", f"Expected error: {expectedDiagnostic}",
+							 path, lineInd, "message", f"Actual error:   {clDiagnostic}")
 			return
 	finally:
 		outPath.unlink()

@@ -3,46 +3,6 @@
 #include "gtest/gtest.h"
 
 
-// === BF_DUMMY_NAME, BF_DUMMY =========================================================================================
-
-namespace {
-
-
-namespace BF_DUMMY_NAME {}
-class BF_DUMMY_NAME {};
-enum  BF_DUMMY_NAME {};
-using BF_DUMMY_NAME = void;
-
-
-int BF_DUMMY;
-int BF_DUMMY{1};
-int BF_DUMMY(2);
-int BF_DUMMY = 3;
-
-
-class BF_DUMMY_NAME {
-	int BF_DUMMY;
-	int BF_DUMMY{1};
-	int BF_DUMMY = 3;
-
-	static const int BF_DUMMY;
-	static const int BF_DUMMY{1};
-	static const int BF_DUMMY = 3;
-};
-
-
-static void BF_DUMMY()
-{
-	int BF_DUMMY;
-	int BF_DUMMY{1};
-	int BF_DUMMY(2);
-	int BF_DUMMY = 3;
-}
-
-
-}	// namespace
-
-
 // === BF_COMPILE_TIME_TEST ============================================================================================
 
 BF_COMPILE_TIME_TEST()

@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <type_traits>
+#include "gtest/gtest.h"
 #include "BF/TestUtils.hpp"
 
 
@@ -128,6 +129,148 @@ static_assert(BF_PASTE(1111111, 2222222) == 11111112222222);
 #define VALUE_1 1111111
 #define VALUE_2 2222222
 static_assert(BF_PASTE(VALUE_1, VALUE_2) == 11111112222222);
+
+
+// === BF_COUNTED_NAME =================================================================================================
+
+namespace {
+
+class BF_COUNTED_NAME(MyPrefix) {};		class BF_COUNTED_NAME(MyPrefix) {};
+
+}	// namespace
+
+
+// === BF_DUMMY_NAME, BF_DUMMY =========================================================================================
+
+namespace {
+
+
+namespace BF_DUMMY_NAME {
+	class BF_DUMMY_NAME {};			class BF_DUMMY_NAME {};
+	enum  BF_DUMMY_NAME {};			enum  BF_DUMMY_NAME {};
+	using BF_DUMMY_NAME = void;		using BF_DUMMY_NAME = void;
+}
+
+
+int BF_DUMMY;	int BF_DUMMY;
+int BF_DUMMY{1};
+int BF_DUMMY(2);
+int BF_DUMMY = 3;
+
+
+enum BF_DUMMY_NAME { BF_DUMMY, BF_DUMMY };
+
+
+class BF_DUMMY_NAME {
+	int BF_DUMMY;
+	int BF_DUMMY{1};
+	int BF_DUMMY = 3;
+
+	static const int BF_DUMMY;
+	static const int BF_DUMMY{1};
+	static const int BF_DUMMY = 3;
+};
+
+
+static void BF_DUMMY()
+{
+	int BF_DUMMY;
+	int BF_DUMMY{1};
+	int BF_DUMMY(2);
+	int BF_DUMMY = 3;
+}
+
+
+}	// namespace
+
+
+// === BF_SCOPE, BF_SCOPE_DECL =========================================================================================
+
+namespace {
+
+
+enum State {
+	Initial,
+	Constructed,
+	Destroyed
+};
+
+
+class TestScope {
+public:
+	explicit TestScope(State& state) : mState(state) { mState = Constructed; }
+	~TestScope()									 { mState = Destroyed;   }
+
+private:
+	State& mState;
+};
+
+
+}	// namespace
+
+
+TEST(Definitions, BF_SCOPE)
+{
+	State s;
+
+	s = Initial;
+	BF_SCOPE(TestScope(s))								// if BF_SCOPE() has most vexing parse, 's' remains 'Initial'
+		EXPECT_EQ(s, Constructed);
+	EXPECT_EQ(s, Destroyed);
+
+	s = Initial;
+	BF_SCOPE(TestScope(s)) {							// if BF_SCOPE() has most vexing parse, 's' remains 'Initial'
+		EXPECT_EQ(s, Constructed);
+	}
+	EXPECT_EQ(s, Destroyed);
+}
+
+
+TEST(Definitions, BF_SCOPE_DECL)
+{
+	State s;
+
+	s = Initial;
+	BF_SCOPE_DECL(TestScope scope(s))
+		EXPECT_EQ(s, Constructed);
+	EXPECT_EQ(s, Destroyed);
+
+	s = Initial;
+	BF_SCOPE_DECL(TestScope scope(s)) {
+		EXPECT_EQ(s, Constructed);
+	}
+	EXPECT_EQ(s, Destroyed);
+
+	int i = 0;
+	BF_SCOPE_DECL(int i = 1) { EXPECT_EQ(i, 1); }		// hiding demo; no name collision between consecutive scopes
+	BF_SCOPE_DECL(int i = 2) { EXPECT_EQ(i, 2); }		// hiding demo; no name collision between consecutive scopes
+}
+
+
+BF_COMPILE_TIME_TEST()
+{
+	BF_SCOPE(0) {
+//	} else {											// [CompilationError]: illegal else without matching if
+	}
+
+	BF_SCOPE_DECL(int i = 0) {
+//	} else {											// [CompilationError]: illegal else without matching if
+	}
+}
+
+
+static int ControlPathsTest1()
+{
+	BF_SCOPE(0)
+		return 0;										// not all control paths return a value, but should not warn
+}
+
+
+static int ControlPathsTest2()
+{
+	BF_SCOPE_DECL(int i = 0)
+		return 0;										// not all control paths return a value, but should not warn
+}
 
 
 // === Bad values ======================================================================================================

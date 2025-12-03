@@ -8,12 +8,6 @@
 #include "BF/RawMemory.hpp"
 
 
-// === BF_DUMMY_NAME, BF_DUMMY =========================================================================================
-
-#define BF_DUMMY_NAME			BF_PASTE(zzzz0z00z0zz0z_, __LINE__)
-#define BF_DUMMY				BF_DUMMY_NAME [[maybe_unused]]
-
-
 // === BF_COMPILE_TIME_TEST ============================================================================================
 
 #define BF_COMPILE_TIME_TEST	static void BF_DUMMY

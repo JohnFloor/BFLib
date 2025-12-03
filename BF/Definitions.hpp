@@ -74,6 +74,23 @@ constexpr UChar MaxUChar = UINT8_MAX;
 #define BF_PASTE(token1, token2)		IMP_BF_PASTE(token1, token2)
 
 
+// === BF_COUNTED_NAME =================================================================================================
+
+#define BF_COUNTED_NAME(prefix)			BF_PASTE(prefix, __COUNTER__)
+
+
+// === BF_DUMMY_NAME, BF_DUMMY =========================================================================================
+
+#define BF_DUMMY_NAME					BF_COUNTED_NAME(zzzz0z00z0zz0z_)
+#define BF_DUMMY						BF_DUMMY_NAME [[maybe_unused]]
+
+
+// === BF_SCOPE, BF_SCOPE_DECL =========================================================================================
+
+#define BF_SCOPE(prvalueExpr)			if (auto BF_DUMMY{prvalueExpr}; false) {} else
+#define BF_SCOPE_DECL(declaration)		if (declaration; false) {} else
+
+
 // === Bad values ======================================================================================================
 
 namespace BF {

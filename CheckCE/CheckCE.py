@@ -83,9 +83,9 @@ def Exit():
 	AssertIsSingleThreadedCode()		# because it may terminate the program
 
 	elapsedTime = time.perf_counter_ns() - cStartTime
-	hours,   r1 = QR(elapsedTime, 1000_000_000 * 60 * 60)
-	minutes, r2 = QR(r1,          1000_000_000 * 60)
-	seconds     =    r2     /     1000_000_000
+	hours,   r1 = QR(elapsedTime, 1_000_000_000 * 60 * 60)
+	minutes, r2 = QR(r1,          1_000_000_000 * 60)
+	seconds     =    r2     /     1_000_000_000
 	print("")
 	print(f"Time Elapsed {hours:02d}:{minutes:02d}:{seconds:05.2f}")
 

@@ -5,7 +5,6 @@
 #include <chrono>
 #include "BF/Assert.hpp"
 #include "BF/ClassUtils.hpp"
-#include "BF/Definitions.hpp"
 
 
 namespace BF {

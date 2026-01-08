@@ -2,6 +2,7 @@
 
 
 #pragma once
+#include "BF/Definitions.hpp"
 
 
 namespace BF {

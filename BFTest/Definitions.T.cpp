@@ -42,6 +42,29 @@ BF_COMPILE_TIME_TEST()
 }
 
 
+// === BF_DEBUG, BF_RELEASE ============================================================================================
+
+static_assert(std::is_same_v<decltype(BF_DEBUG),   bool>);
+static_assert(std::is_same_v<decltype(BF_RELEASE), bool>);
+
+#ifdef NDEBUG
+constexpr bool NDebugDefined = true;
+#else
+constexpr bool NDebugDefined = false;
+#endif
+
+static_assert(BF_DEBUG   != NDebugDefined);
+static_assert(BF_RELEASE == NDebugDefined);
+
+#if BF_DEBUG
+// Debug-only code...
+#endif
+
+#if BF_RELEASE
+// Release-only code...
+#endif
+
+
 // === BF_UNUSED_VAR ===================================================================================================
 
 BF_COMPILE_TIME_TEST(int par)

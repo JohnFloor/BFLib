@@ -42,6 +42,17 @@ using UChar = unsigned char;
 constexpr UChar MaxUChar = UINT8_MAX;
 
 
+// === BF_DEBUG, BF_RELEASE ============================================================================================
+
+#ifdef NDEBUG
+	#define BF_DEBUG	false
+	#define BF_RELEASE	true
+#else
+	#define BF_DEBUG	true
+	#define BF_RELEASE	false
+#endif
+
+
 // === BF_UNUSED_VAR ===================================================================================================
 
 #define BF_UNUSED_VAR(...)				__VA_ARGS__

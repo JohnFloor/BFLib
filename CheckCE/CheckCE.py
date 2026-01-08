@@ -373,7 +373,7 @@ def ProcessCompilationErrorTag(path: Path, compileOneFile: Callable[[Path], Comp
 			return
 
 	try:
-		outPath = path.parent / f"{path.stem}.{cScriptName}-{lineInd + 1}{path.suffix}"
+		outPath = path.parent / f"{path.stem}.{cScriptName}-{lineInd + 1}.~{path.suffix}"
 
 		with outPath.open("w", encoding = "utf-8") as f:
 			f.writelines(lines[0 : lineInd])

@@ -4,6 +4,7 @@ import sys
 import subprocess
 import time
 import threading
+from dataclasses import dataclass
 from pathlib import Path
 from subprocess import CompletedProcess
 from typing import Callable
@@ -32,10 +33,16 @@ reClExeFullPath         = re.compile(r"(^.*\bCL\.exe\b)", re.IGNORECASE)
 rePDBSwitches           = re.compile(r"/Z[7iI] ")
 reCompilationErrorTag   = re.compile(r"\[CompilationError(?:-(\w*))?\]")
 reCompilationErrorLine  = re.compile(r"(\s*)//([^/])(.*[^/]//\s*" + reCompilationErrorTag.pattern + r":" + r"\s*(.*\S)\s*)")
-reDiagnosticLine        = re.compile(r"^..[^:]*\([0-9,]+\): ([a-z ]+) [A-Z]+\d+: (.*)")
+reDiagnosticLine        = re.compile(r"..[^:]*\([0-9,]+\): ([a-z ]+) [A-Z]+\d+: (.*)")
 
 gLoggedTitles           = set()				# the titles that have been already logged
 gPrintLock              = threading.Lock()	# one common lock for printing, using 'gError' and 'gLoggedTitles'
+
+
+@dataclass
+class Diagnostic:
+	level: str		# "warning", "error", "fatal  error"
+	text:  str		# text of the diagnostic
 
 
 def PrintUsage() -> None:
@@ -321,6 +328,17 @@ def GetCompileFunction(dirToTouch: Path, developerEnv: dict[str, str]) -> Callab
 	return CompileOneFile
 
 
+def GetFirstDiagnostic(compilerStdOut: str) -> Diagnostic:
+	compilerStdOutLines = compilerStdOut.splitlines()
+
+	mo = re.fullmatch(reDiagnosticLine, compilerStdOutLines[1])			# 0th line is the name of the .cpp
+	assert mo is not None, "Unrecognized diagnostic line format."
+
+	firstDiagnostic = Diagnostic(mo.group(1), mo.group(2))
+
+	return firstDiagnostic
+
+
 def ProcessCompilationErrorTag(path: Path, compileOneFile: Callable[[Path], CompletedProcess], lines: list[str], lineInd: int) -> None:
 	taggedLine = lines[lineInd]
 	tagOccurrences = len(re.findall(reCompilationErrorTag, taggedLine))
@@ -339,7 +357,7 @@ def ProcessCompilationErrorTag(path: Path, compileOneFile: Callable[[Path], Comp
 
 	uncommentedLine    = mo.group(1) + ("" if mo.group(2) == " " else mo.group(2)) + mo.group(3)
 	onSolutionConf     = mo.group(4)
-	expectedDiagnostic = mo.group(5)
+	expectedDiagnostic = Diagnostic("error", mo.group(5))
 
 	if onSolutionConf is not None:
 		if onSolutionConf == "":
@@ -361,24 +379,18 @@ def ProcessCompilationErrorTag(path: Path, compileOneFile: Callable[[Path], Comp
 			PrintErrorFailed(path, lineInd, "error", "Compilation succeeded.")			# 'cl.stdout' can have warnings
 			return
 
-		clDiagnosticLine = cl.stdout.splitlines()[1]									# 0th line is the name of the .cpp
+		firstDiagnostic = GetFirstDiagnostic(cl.stdout)
 
-		mo = re.fullmatch(reDiagnosticLine, clDiagnosticLine)
-		assert mo is not None, "Unrecognized diagnostic line format."
-
-		clDiagnosticType = mo.group(1)
-		clDiagnostic     = mo.group(2)
-
-		if clDiagnosticType != "error":
-			PrintErrorFailed(path, lineInd, "error",   f"The first diagnostic is a {clDiagnosticType}.",
-							 path, lineInd, "message", f"Expected error:    {expectedDiagnostic}",
-							 path, lineInd, "message", f"Actual diagnostic: {clDiagnostic}")
+		if firstDiagnostic.level != expectedDiagnostic.level:
+			PrintErrorFailed(path, lineInd, "error",   f"The first diagnostic is a {firstDiagnostic.level}.",
+							 path, lineInd, "message", f"Expected error:    {expectedDiagnostic.text}",
+							 path, lineInd, "message", f"Actual diagnostic: {firstDiagnostic.text}")
 			return
 
-		if expectedDiagnostic not in clDiagnostic:
+		if expectedDiagnostic.text not in firstDiagnostic.text:
 			PrintErrorFailed(path, lineInd, "error",   f"Expected error not found.",
-							 path, lineInd, "message", f"Expected error: {expectedDiagnostic}",
-							 path, lineInd, "message", f"Actual error:   {clDiagnostic}")
+							 path, lineInd, "message", f"Expected error: {expectedDiagnostic.text}",
+							 path, lineInd, "message", f"Actual error:   {firstDiagnostic.text}")
 			return
 	finally:
 		outPath.unlink()

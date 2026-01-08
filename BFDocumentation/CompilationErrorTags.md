@@ -27,9 +27,12 @@ then
 
 - the file is expected not to compile, and
 - the first diagnostic is expected to be an `error` (not `fatal error` or `warning`), and
-- the first diagnostic is expected to contain the string after the tag, verbatim.
+- the first diagnostic text is expected to contain the string after the tag, verbatim.
+  If the first diagnostic is an `error`, and its text is `the following warning is treated as an error`, then the second diagnostic text should be checked, as this describes the actual error.
 
-Note, that compilation can succeed (`cl.exe`'s exit code is `0`) with warnings on stdout.
+If there are only warnings in the program (and no errors) compilation succeeds (`cl.exe`'s exit code is `0`). A `[CompilationError]` tag means that the uncommented line must make the compilation fail, so warnings cannot be tested this way.
+
+To test warnings, go to *Project Properties* > *C/C++* > *General*, and set *Treat Warnings As Errors* to *Yes (/WX)*. This will report warnings as errors, and makes the tag check the second (actual) diagnostic.
 
 
 ## The <code>[CompilationError-<i>SolutionConf</i>]</code> tag

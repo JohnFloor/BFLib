@@ -336,7 +336,13 @@ def GetFirstDiagnostic(compilerStdOut: str) -> Diagnostic:
 
 	firstDiagnostic = Diagnostic(mo.group(1), mo.group(2))
 
-	return firstDiagnostic
+	if firstDiagnostic.level == "error" and firstDiagnostic.text == "the following warning is treated as an error":
+		mo = re.fullmatch(reDiagnosticLine, compilerStdOutLines[2])
+		assert mo is not None, "Unrecognized diagnostic line format."
+
+		return Diagnostic("error", mo.group(2))
+	else:
+		return firstDiagnostic
 
 
 def ProcessCompilationErrorTag(path: Path, compileOneFile: Callable[[Path], CompletedProcess], lines: list[str], lineInd: int) -> None:

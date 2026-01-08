@@ -1,6 +1,6 @@
 # CheckCE.py
 
-Checks `[CompilationError]` tags in .cpp files.
+Checks [`[CompilationError]`](CompilationErrorTags.md) tags in .cpp files.
 
 
 ## Usage

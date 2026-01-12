@@ -187,7 +187,7 @@ TEST(RawMemory, SecureMemset)
 
 	const double duration = BF::MeasureDuration([] {
 		char buffer[1024];
-		for (size_t i = 0; i < MaxInt16 / 2; i++)
+		for (std::size_t i = 0; i < MaxInt16 / 2; i++)
 			BF::SecureMemset(buffer, 0, sizeof(buffer));
 	});
 

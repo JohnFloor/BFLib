@@ -79,7 +79,7 @@ bool IsNullReference(auto&& value) noexcept
 // === SecureMemset ====================================================================================================
 // TODO-C23: Replace with memset_explicit().
 
-inline void SecureMemset(void* startAddress, UChar value, size_t size)
+inline void SecureMemset(void* startAddress, UChar value, std::size_t size)
 {
 	UChar* begin = static_cast<UChar*>(startAddress);
 	UChar* end   = begin + size;

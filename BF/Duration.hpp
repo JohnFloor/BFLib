@@ -10,9 +10,9 @@
 namespace BF {
 
 
-// === class HighResolutionClock =======================================================================================
+// === class HiResClock ================================================================================================
 
-class HighResolutionClock : public std::chrono::high_resolution_clock {
+class HiResClock : public std::chrono::high_resolution_clock {
 };
 
 
@@ -20,9 +20,9 @@ class HighResolutionClock : public std::chrono::high_resolution_clock {
 
 double MeasureDuration(auto&& callable)
 {
-	const auto t1 = HighResolutionClock::now();
+	const auto t1 = HiResClock::now();
 	BF_FWD(callable)();
-	const auto t2 = HighResolutionClock::now();
+	const auto t2 = HiResClock::now();
 
 	return std::chrono::duration<double>(t2 - t1).count();		// seconds
 }
@@ -39,25 +39,25 @@ class Timer : ImmobileClass {
 public:
 	explicit Timer(double seconds) :
 		mSeconds(seconds),
-		mEndTime(HighResolutionClock::now() + std::chrono::nanoseconds(Int64(seconds * 1e9)))
+		mEndTime(HiResClock::now() + std::chrono::nanoseconds(Int64(seconds * 1e9)))
 	{
 		BF_ASSERT(seconds >= 0.0);
 	}
 
 	bool HasTime() const {
-		return HighResolutionClock::now() < mEndTime;
+		return HiResClock::now() < mEndTime;
 	}
 
 	double GetProgress() const {
-		const double remainingDuration = std::chrono::duration<double>(mEndTime - HighResolutionClock::now()).count();		// seconds
+		const double remainingDuration = std::chrono::duration<double>(mEndTime - HiResClock::now()).count();		// seconds
 		const double progress          = 1.0 - remainingDuration / mSeconds;
 
 		return progress <= 1.0 ? progress : 1.0;
 	}
 
 private:
-	const double						  mSeconds;
-	const HighResolutionClock::time_point mEndTime;
+	const double				 mSeconds;
+	const HiResClock::time_point mEndTime;
 };
 
 

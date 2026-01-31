@@ -7,11 +7,11 @@
 // Not tested. Only usage examples are shown.
 
 
-// === class HighResolutionClock =======================================================================================
+// === class HiResClock ================================================================================================
 
 BF_COMPILE_TIME_TEST()
 {
-	BF::HighResolutionClock::time_point t = BF::HighResolutionClock::now();
+	BF::HiResClock::time_point t = BF::HiResClock::now();
 }
 
 

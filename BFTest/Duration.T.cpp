@@ -9,6 +9,9 @@
 
 // === class HiResClock ================================================================================================
 
+static_assert(BF::HiResClock::is_steady);
+
+
 BF_COMPILE_TIME_TEST()
 {
 	BF::HiResClock::time_point t = BF::HiResClock::now();

@@ -168,6 +168,27 @@ BF_COMPILE_TIME_TEST()
 }
 
 
+// === EnumType, ScopedEnumType ========================================================================================
+
+BF_COMPILE_TIME_TEST()
+{
+	enum E {};
+	enum class EC {};
+
+	constexpr int i  = 0;
+	constexpr E   e  = {};
+	constexpr EC  ec = {};
+
+//	BF::EnumType auto BF_DUMMY = i;					// [CompilationError]: the associated constraints are not satisfied
+	BF::EnumType auto BF_DUMMY = e;
+	BF::EnumType auto BF_DUMMY = ec;
+
+//	BF::ScopedEnumType auto BF_DUMMY = i;			// [CompilationError]: the associated constraints are not satisfied
+//	BF::ScopedEnumType auto BF_DUMMY = e;			// [CompilationError]: the associated constraints are not satisfied
+	BF::ScopedEnumType auto BF_DUMMY = ec;
+}
+
+
 // === RelatedTo =======================================================================================================
 
 template <class Type1, class Type2, bool ExpectedResult>

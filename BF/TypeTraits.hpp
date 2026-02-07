@@ -62,6 +62,16 @@ template <class T>
 concept			UInteger = Integer<T> && std::is_unsigned_v<T>;
 
 
+// === EnumType, ScopedEnumType ========================================================================================
+
+template <class Type>
+concept EnumType = std::is_enum_v<Type>;
+
+
+template <class Type>
+concept ScopedEnumType = std::is_scoped_enum_v<Type>;
+
+
 // === RelatedTo =======================================================================================================
 
 template <class T1, class T2>

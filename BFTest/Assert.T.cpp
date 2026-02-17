@@ -8,6 +8,8 @@
 // === Helpers =========================================================================================================
 
 namespace {
+	BF::AssertInitializer BF_DUMMY;
+
 	template <class...> struct True  { static constexpr bool Value = true;  };
 	template <class...> struct False { static constexpr bool Value = false; };
 }

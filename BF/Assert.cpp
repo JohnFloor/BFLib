@@ -6,7 +6,7 @@
 namespace BF {
 
 
-void InitializeAsserts()
+void InitializeAssert()
 {
 	_set_error_mode(_OUT_TO_MSGBOX);
 }
@@ -14,7 +14,7 @@ void InitializeAsserts()
 
 AssertInitializer::AssertInitializer()
 {
-	InitializeAsserts();
+	InitializeAssert();
 }
 
 

@@ -15,7 +15,7 @@ namespace ImpAssert {
 }
 
 
-void InitializeAsserts();
+void InitializeAssert();
 
 
 class AssertInitializer {

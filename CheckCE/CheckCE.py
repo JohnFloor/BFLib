@@ -39,6 +39,10 @@ gLoggedTitles           = set()				# the titles that have been already logged
 gPrintLock              = threading.Lock()	# one common lock for printing, using 'gError' and 'gLoggedTitles'
 
 
+class FileReadError(Exception):
+    pass
+
+
 @dataclass
 class Diagnostic:
 	level: str		# "warning", "error", "fatal  error"
@@ -406,7 +410,10 @@ def ProcessCppFile(pool: ThreadPoolExecutor, path: Path, compileOneFile: Callabl
 	assert path.is_file(), f"'{path}' should be an existing file."
 	assert IsCppExt(path), f"'{path}' should have '.cpp' extension."
 
-	lines = path.read_text(encoding = "utf-8").splitlines(keepends = True)
+	try:
+		lines = path.read_text(encoding = "utf-8").splitlines(keepends = True)
+	except Exception as e:
+		raise FileReadError(f"Error reading file '{path}'. {type(e).__name__}: {e}") from e
 
 	foundTag = False
 

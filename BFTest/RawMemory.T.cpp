@@ -7,6 +7,12 @@
 
 // === GenPtr ==========================================================================================================
 
+// C++23 [expr.call]#13: A function call is an lvalue if the result type is [...] an rvalue reference to function type.
+// https://timsong-cpp.github.io/cppwp/n4950/expr.call#13
+template <class Type>
+using UsuallyRR = std::conditional_t<std::is_function_v<Type>, Type&, Type&&>;
+
+
 template <class Type>
 static void TestGenPtr()
 {
@@ -30,9 +36,9 @@ static void TestGenPtr()
 	EXPECT_TRUE(BF::IsNullReference(genPtr.AsRef<Type&&>()));
 
 	static_assert(std::is_same_v<decltype(genPtr.AsPtr<Type>()),   Type*>);
-	static_assert(std::is_same_v<decltype(genPtr.AsRef<Type>()),   Type&&>);
+	static_assert(std::is_same_v<decltype(genPtr.AsRef<Type>()),   UsuallyRR<Type>>);
 	static_assert(std::is_same_v<decltype(genPtr.AsRef<Type&>()),  Type&>);
-	static_assert(std::is_same_v<decltype(genPtr.AsRef<Type&&>()), Type&&>);
+	static_assert(std::is_same_v<decltype(genPtr.AsRef<Type&&>()), UsuallyRR<Type>>);
 
 	static_assert(noexcept(genPtr = testPtr));
 	static_assert(noexcept(genPtr.AsPtr<Type>()));

@@ -38,7 +38,7 @@ constexpr decltype(auto) Move(auto&& value) noexcept
 template <class Type>
 constexpr Type& LVal(Type&& value) noexcept
 {
-	return value;
+	return static_cast<Type&>(value);
 }
 
 

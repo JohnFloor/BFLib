@@ -16,6 +16,7 @@ argPath                 = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolv
 argSolutionConf         =      sys.argv[2] if len(sys.argv) > 2 else "Debug"
 argNWorkerThreads       =      sys.argv[3] if len(sys.argv) > 3 else "10"
 
+cVisualStudioDir        = Path(r"C:\Program Files\Microsoft Visual Studio\18\Community")
 cScriptName             = Path(sys.argv[0]).stem
 
 cStartTime              = time.perf_counter_ns()
@@ -266,7 +267,7 @@ def ChangeTerminalToUtf8() -> None:
 
 
 def GetDeveloperEnv() -> dict[str, str]:
-	vcVarsPath   = Path(r"C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat")
+	vcVarsPath   = cVisualStudioDir / "VC/Auxiliary/Build/vcvars64.bat"
 	vcVarsResult = RunSubprocess(f"{vcVarsPath.name} >nul && set", vcVarsPath.parent, "InShell")
 	
 	env = os.environ.copy()
@@ -279,7 +280,7 @@ def GetDeveloperEnv() -> dict[str, str]:
 
 
 def BuildSolution(solutionDir: Path, mode: str) -> CompletedProcess:
-	commandLine = [r"C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe",
+	commandLine = [cVisualStudioDir / "MSBuild/Current/Bin/amd64/MSBuild.exe",
 				   f"/p:Configuration={argSolutionConf}",
 					"/p:Platform=x64"]
 

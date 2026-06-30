@@ -495,8 +495,8 @@ constexpr std::size_t BF_DUMMY = std::hash<ConstexprF>()({});
 
 // BF::Hash: outside std::hash it is not convertible to std::size_t ====================================================
 
-// std::size_t BF_DUMMY = BF::Hash(0);							// [CompilationError]: 'BF::Hash::operator size_t': cannot access private member
-// std::size_t BF_DUMMY(BF::Hash(0));							// [CompilationError]: 'BF::Hash::operator size_t': cannot access private member
+// std::size_t BF_DUMMY = BF::Hash(0);							// [CompilationError]: 'BF::Hash::operator unsigned __int64': cannot access private member
+// std::size_t BF_DUMMY(BF::Hash(0));							// [CompilationError]: 'BF::Hash::operator unsigned __int64': cannot access private member
 
 
 // === Hashing a class template of a 3rd party library =================================================================

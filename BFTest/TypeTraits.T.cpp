@@ -7,14 +7,14 @@
 
 // === PrintType =======================================================================================================
 
-// bool b = BF::PrintType<void>;				// [CompilationError]: static_assert failed: 'See the type in the error message.'
-// bool b = BF::PrintType<int, int[7]>;			// [CompilationError]: static_assert failed: 'See the type in the error message.'
+// bool b = BF::PrintType<void>;				// [CompilationError]: static assertion failed: 'See the type in the error message.'
+// bool b = BF::PrintType<int, int[7]>;			// [CompilationError]: static assertion failed: 'See the type in the error message.'
 
 BF_COMPILE_TIME_TEST()
 {
-//	BF::PrintType auto printType = 123;			// [CompilationError]: static_assert failed: 'See the type in the error message.'
-//	BF::PrintType<void>;						// [CompilationError]: static_assert failed: 'See the type in the error message.'
-//	BF::PrintType<int, int[7]>;					// [CompilationError]: static_assert failed: 'See the type in the error message.'
+//	BF::PrintType auto printType = 123;			// [CompilationError]: static assertion failed: 'See the type in the error message.'
+//	BF::PrintType<void>;						// [CompilationError]: static assertion failed: 'See the type in the error message.'
+//	BF::PrintType<int, int[7]>;					// [CompilationError]: static assertion failed: 'See the type in the error message.'
 }
 
 

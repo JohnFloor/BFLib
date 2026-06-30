@@ -266,7 +266,7 @@ def ChangeTerminalToUtf8() -> None:
 
 
 def GetDeveloperEnv() -> dict[str, str]:
-	vcVarsPath   = Path(r"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat")
+	vcVarsPath   = Path(r"C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat")
 	vcVarsResult = RunSubprocess(f"{vcVarsPath.name} >nul && set", vcVarsPath.parent, "InShell")
 	
 	env = os.environ.copy()
@@ -279,7 +279,7 @@ def GetDeveloperEnv() -> dict[str, str]:
 
 
 def BuildSolution(solutionDir: Path, mode: str) -> CompletedProcess:
-	commandLine = [r"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe",
+	commandLine = [r"C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe",
 				   f"/p:Configuration={argSolutionConf}",
 					"/p:Platform=x64"]
 

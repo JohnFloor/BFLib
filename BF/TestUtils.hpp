@@ -79,4 +79,25 @@ private:
 };
 
 
+// === AssertTrivialCopyMoveDtor() =====================================================================================
+
+template <class Type>
+void AssertTrivialCopyMoveDtor()
+{
+	static_assert(std::is_trivially_copyable_v<Type>);
+
+	static_assert(std::is_trivially_constructible_v<Type, Type&>);
+	static_assert(std::is_trivially_constructible_v<Type, const Type&>);
+	static_assert(std::is_trivially_constructible_v<Type, Type&&>);
+	static_assert(std::is_trivially_constructible_v<Type, const Type&&>);
+
+	static_assert(std::is_trivially_assignable_v<Type&, Type&>);
+	static_assert(std::is_trivially_assignable_v<Type&, const Type&>);
+	static_assert(std::is_trivially_assignable_v<Type&, Type&&>);
+	static_assert(std::is_trivially_assignable_v<Type&, const Type&&>);
+
+	static_assert(std::is_trivially_destructible_v<Type>);
+}
+
+
 }	// namespace BF

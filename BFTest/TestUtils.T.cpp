@@ -147,3 +147,134 @@ TEST(TestUtils, MemsetValue)
 	static_assert(std::is_same_v<decltype(TestType{}.GetVR()),  volatile int&&>);
 	static_assert(std::is_same_v<decltype(TestType{}.GetCVR()), const volatile int&&>);
 }
+
+
+// === AssertTrivialCopyMoveDtor() =====================================================================================
+
+BF_COMPILE_TIME_TEST()
+{
+	struct T0 {
+		T0(const T0&) = default;
+		T0(T0&&) = default;
+		T0& operator=(const T0&) = default;
+		T0& operator=(T0&&) = default;
+		~T0() = default;
+	};
+
+	BF::AssertTrivialCopyMoveDtor<T0>();
+}
+
+
+BF_COMPILE_TIME_TEST()
+{
+	struct T1 {
+		T1(const T1&) {}
+		T1(T1&&) = default;
+		T1& operator=(const T1&) = default;
+		T1& operator=(T1&&) = default;
+		~T1() = default;
+	};
+
+//	BF::AssertTrivialCopyMoveDtor<T1>();		// [CompilationError]: static assertion failed: 'std::is_trivially_copyable_v<Type>'
+
+	struct T2 {
+		T2(const T2&) = default;
+		T2(T2&&) noexcept {}
+		T2& operator=(const T2&) = default;
+		T2& operator=(T2&&) = default;
+		~T2() = default;
+	};
+
+//	BF::AssertTrivialCopyMoveDtor<T2>();		// [CompilationError]: static assertion failed: 'std::is_trivially_copyable_v<Type>'
+
+	struct T3 {
+		T3(const T3&) = default;
+		T3(T3&&) = default;
+		T3& operator=(const T3&) { return *this; }
+		T3& operator=(T3&&) = default;
+		~T3() = default;
+	};
+
+//	BF::AssertTrivialCopyMoveDtor<T3>();		// [CompilationError]: static assertion failed: 'std::is_trivially_copyable_v<Type>'
+
+	struct T4 {
+		T4(const T4&) = default;
+		T4(T4&&) = default;
+		T4& operator=(const T4&) = default;
+		T4& operator=(T4&&) noexcept { return *this; }
+		~T4() = default;
+	};
+
+//	BF::AssertTrivialCopyMoveDtor<T4>();		// [CompilationError]: static assertion failed: 'std::is_trivially_copyable_v<Type>'
+
+	struct T5 {
+		T5(const T5&) = default;
+		T5(T5&&) = default;
+		T5& operator=(const T5&) = default;
+		T5& operator=(T5&&) = default;
+		~T5() {}
+	};
+
+//	BF::AssertTrivialCopyMoveDtor<T5>();		// [CompilationError]: static assertion failed: 'std::is_trivially_copyable_v<Type>'
+
+	struct T5v {
+		T5v(const T5v&) = default;
+		T5v(T5v&&) = default;
+		T5v& operator=(const T5v&) = default;
+		T5v& operator=(T5v&&) = default;
+		virtual ~T5v() = default;
+	};
+
+//	BF::AssertTrivialCopyMoveDtor<T5v>();		// [CompilationError]: static assertion failed: 'std::is_trivially_copyable_v<Type>'
+}
+
+
+#define DEFINE_CLASS_WITH_EXTRA_CTOR(Class, ctorParam)	\
+	struct Class {										\
+		Class(const Class&) = default;					\
+		Class(Class&&) = default;						\
+		Class& operator=(const Class&) = default;		\
+		Class& operator=(Class&&) = default;			\
+		~Class() = default;								\
+														\
+		Class(ctorParam) {}								\
+	};
+
+
+#define DEFINE_CLASS_WITH_EXTRA_ASS(Class, assParam)	\
+	struct Class {										\
+		Class(const Class&) = default;					\
+		Class(Class&&) = default;						\
+		Class& operator=(const Class&) = default;		\
+		Class& operator=(Class&&) = default;			\
+		~Class() = default;								\
+														\
+		Class& operator=(assParam) { return *this; }	\
+	};
+
+
+namespace {
+	DEFINE_CLASS_WITH_EXTRA_CTOR(CtorR,   auto&)
+	DEFINE_CLASS_WITH_EXTRA_CTOR(CtorCR,  const auto&)
+	DEFINE_CLASS_WITH_EXTRA_CTOR(CtorRR,  auto&&)			// forwarding
+	DEFINE_CLASS_WITH_EXTRA_CTOR(CtorCRR, const auto&&)
+
+	DEFINE_CLASS_WITH_EXTRA_ASS (AssR,    auto&)
+	DEFINE_CLASS_WITH_EXTRA_ASS (AssCR,   const auto&)
+	DEFINE_CLASS_WITH_EXTRA_ASS (AssRR,   auto&&)			// forwarding
+	DEFINE_CLASS_WITH_EXTRA_ASS (AssCRR,  const auto&&)
+}	// namespace
+
+
+BF_COMPILE_TIME_TEST()
+{
+//	BF::AssertTrivialCopyMoveDtor<CtorR>();		// [CompilationError]: static assertion failed: 'std::is_trivially_constructible_v<Type, Type&>'
+	BF::AssertTrivialCopyMoveDtor<CtorCR>();
+//	BF::AssertTrivialCopyMoveDtor<CtorRR>();	// [CompilationError]: static assertion failed: 'std::is_trivially_constructible_v<Type, Type&>'
+//	BF::AssertTrivialCopyMoveDtor<CtorCRR>();	// [CompilationError]: static assertion failed: 'std::is_trivially_constructible_v<Type, const Type&&>'
+
+//	BF::AssertTrivialCopyMoveDtor<AssR>();		// [CompilationError]: static assertion failed: 'std::is_trivially_assignable_v<Type&, Type&>'
+	BF::AssertTrivialCopyMoveDtor<AssCR>();
+//	BF::AssertTrivialCopyMoveDtor<AssRR>();		// [CompilationError]: static assertion failed: 'std::is_trivially_assignable_v<Type&, Type&>'
+//	BF::AssertTrivialCopyMoveDtor<AssCRR>();	// [CompilationError]: static assertion failed: 'std::is_trivially_assignable_v<Type&, const Type&&>'
+}

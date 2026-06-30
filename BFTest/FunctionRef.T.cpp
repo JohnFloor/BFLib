@@ -94,19 +94,7 @@ static void TestCopyMove()
 	{ DestFun    f = SourceFun(&S::Fun).GetCR(); EXPECT_EQ(f(), 123); }
 	{ DestFun f; f = SourceFun(&S::Fun).GetCR(); EXPECT_EQ(f(), 123); }
 
-	static_assert(std::is_trivially_copyable_v<DestFun>);
-
-	static_assert(std::is_trivially_constructible_v<DestFun, DestFun&>);
-	static_assert(std::is_trivially_constructible_v<DestFun, const DestFun&>);
-	static_assert(std::is_trivially_constructible_v<DestFun, DestFun&&>);
-	static_assert(std::is_trivially_constructible_v<DestFun, const DestFun&&>);
-
-	static_assert(std::is_trivially_assignable_v<DestFun&, DestFun&>);
-	static_assert(std::is_trivially_assignable_v<DestFun&, const DestFun&>);
-	static_assert(std::is_trivially_assignable_v<DestFun&, DestFun&&>);
-	static_assert(std::is_trivially_assignable_v<DestFun&, const DestFun&&>);
-
-	static_assert(std::is_trivially_destructible_v<DestFun>);
+	BF::AssertTrivialCopyMoveDtor<DestFun>();
 }
 
 

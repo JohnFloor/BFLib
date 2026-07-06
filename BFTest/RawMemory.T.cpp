@@ -5,6 +5,20 @@
 #include "BF/TestUtils.hpp"
 
 
+// === Storage =========================================================================================================
+
+BF_COMPILE_TIME_TEST()
+{
+	class X { int m; };
+
+	static_assert(sizeof(X)  == sizeof(BF::Storage<X>));
+	static_assert(alignof(X) == alignof(BF::Storage<X>));
+	static_assert(std::is_standard_layout_v<BF::Storage<X>>);
+	static_assert(std::is_trivially_default_constructible_v<BF::Storage<X>>);
+	BF::AssertTrivialCopyMoveDtor<BF::Storage<X>>();
+}
+
+
 // === GenPtr ==========================================================================================================
 
 // C++23 [expr.call]#13: A function call is an lvalue if the result type is [...] an rvalue reference to function type.

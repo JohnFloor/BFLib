@@ -9,6 +9,14 @@
 namespace BF {
 
 
+// === Storage =========================================================================================================
+
+template <class Type>
+class Storage {
+	alignas(Type) std::byte mBuffer[sizeof(Type)];
+};
+
+
 // === GenPtr ==========================================================================================================
 // Can hold the address of an object or a function. Cannot hold a pointer to member.
 

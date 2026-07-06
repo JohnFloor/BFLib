@@ -19,3 +19,13 @@ Unit tests for `BF`. It also tests incorrect usages of the library, i.e. it cont
 ### Directory `CheckCE`
 
 It contains a Python script [`CheckCE.py`](BFDocumentation/CheckCE.md) that automates checking the mentioned `[CompilationError]` tags.
+
+
+### Directory `GTU`
+
+Google Test Utilities. The class `GTU::Diary` keeps track of what happened to it (construction, copy, move, destruction). This can be later queried in tests.
+
+
+### Directory `GTUTest`
+
+Unit tests for `GTU`.

@@ -99,7 +99,7 @@ def Exit():
 	minutes, r2 = QR(r1,          1_000_000_000 * 60)
 	seconds     =    r2     /     1_000_000_000
 	print("")
-	print(f"Time Elapsed {hours:02d}:{minutes:02d}:{seconds:05.2f}")
+	print(f"Time Elapsed {hours}:{minutes:02d}:{seconds:05.2f}")
 
 	if gError is None:
 		sys.exit(0)

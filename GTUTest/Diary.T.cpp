@@ -30,11 +30,21 @@ static void Worker(size_t nWork)
 
 
 // === Tests ===========================================================================================================
+
+TEST(Diary, Push)
+{
+	GTU_XD("")   {}
+	GTU_XD("a")  { GTU::Push('a'); }
+	GTU_XD("ab") { GTU::Push('a'); GTU::Push('b'); }
+	GTU_XD("")   { GTU::Push(""); }
+	GTU_XD("ab") { GTU::Push("ab"); }
+}
+
+
 TEST(Diary, Basics)
 {
 	static_assert(std::is_empty_v<GTU::Diary>);
 
-	{                  GTU_XD("")   {}                               }
 	{ GTU::Diary s;    GTU_XD("+-") { GTU::Diary d; }                }
 	{ GTU::Diary s;    GTU_XD("C-") { GTU::Diary t = s; }            }
 	{ GTU::Diary s;    GTU_XD("M-") { GTU::Diary t = std::move(s); } }

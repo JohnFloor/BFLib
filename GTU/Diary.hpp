@@ -16,14 +16,18 @@ namespace ImpDiary {
 }
 
 
+inline void Push(char event)				{ ImpDiary::gEvents += event; }
+inline void Push(std::string_view event)	{ ImpDiary::gEvents += event; }
+
+
 class Diary {
 public:
-	Diary()								{ ImpDiary::gEvents += '+'; }
-	Diary(const Diary&)					{ ImpDiary::gEvents += 'C'; }
-	Diary(Diary&&) noexcept				{ ImpDiary::gEvents += 'M'; }
-	Diary& operator=(const Diary&)		{ ImpDiary::gEvents += 'C'; return *this; }		// records self-copy too
-	Diary& operator=(Diary&&) noexcept	{ ImpDiary::gEvents += 'M'; return *this; }		// records self-move too
-	~Diary()							{ ImpDiary::gEvents += '-'; }
+	Diary()									{ Push('+'); }
+	Diary(const Diary&)						{ Push('C'); }
+	Diary(Diary&&) noexcept					{ Push('M'); }
+	Diary& operator=(const Diary&)			{ Push('C'); return *this; }		// records self-copy too
+	Diary& operator=(Diary&&) noexcept		{ Push('M'); return *this; }		// records self-move too
+	~Diary()								{ Push('-'); }
 
 	class Guard {
 	public:

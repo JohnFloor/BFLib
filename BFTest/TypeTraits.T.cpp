@@ -18,6 +18,88 @@ BF_COMPILE_TIME_TEST()
 }
 
 
+// === NullPtr =========================================================================================================
+
+template <class Type>
+static void TestNullPtr()
+{
+	static_assert(std::is_same_v<decltype(BF::NullPtr<Type>), const std::add_pointer_t<Type>>);
+	static_assert(BF::NullPtr<Type> == nullptr);
+}
+
+
+template <class Type>
+static void TestNullPtrAllCV()
+{
+	TestNullPtr<Type>();
+	TestNullPtr<const Type>();
+	TestNullPtr<volatile Type>();
+	TestNullPtr<const volatile Type>();
+}
+
+
+BF_COMPILE_TIME_TEST()
+{
+	enum E {};
+	enum class EC {};
+	class C;
+	class CC {};
+	union U;
+	union UU {};
+
+	TestNullPtrAllCV<void              >();
+	TestNullPtrAllCV<std::nullptr_t    >();
+	TestNullPtrAllCV<bool              >();
+	TestNullPtrAllCV<int               >();
+	TestNullPtrAllCV<double            >();
+	TestNullPtrAllCV<char&             >();
+	TestNullPtrAllCV<char&&            >();
+	TestNullPtrAllCV<void*             >();
+	TestNullPtrAllCV<const void*       >();
+	TestNullPtrAllCV<int C::*          >();
+	TestNullPtrAllCV<int C::**         >();
+	TestNullPtrAllCV<int C::*&         >();
+	TestNullPtrAllCV<int C::*&&        >();
+	TestNullPtrAllCV<void (C::*)()     >();
+	TestNullPtrAllCV<void (C::**)()    >();
+	TestNullPtrAllCV<void (C::*&)()    >();
+	TestNullPtrAllCV<void (C::*&&)()   >();
+	TestNullPtrAllCV<void (C::*)() &   >();
+	TestNullPtrAllCV<void (C::**)() &  >();
+	TestNullPtrAllCV<void (C::*&)() &  >();
+	TestNullPtrAllCV<void (C::*&&)() & >();
+	TestNullPtrAllCV<char[]            >();
+	TestNullPtrAllCV<char(*)[]         >();
+	TestNullPtrAllCV<char(&)[]         >();
+	TestNullPtrAllCV<char(&&)[]        >();
+	TestNullPtrAllCV<char[][44]        >();
+	TestNullPtrAllCV<char(*)[][44]     >();
+	TestNullPtrAllCV<char(&)[][44]     >();
+	TestNullPtrAllCV<char(&&)[][44]    >();
+	TestNullPtrAllCV<char[4]           >();
+	TestNullPtrAllCV<char(*)[4]        >();
+	TestNullPtrAllCV<char(&)[4]        >();
+	TestNullPtrAllCV<char(&&)[4]       >();
+	TestNullPtrAllCV<char[4][44]       >();
+	TestNullPtrAllCV<char(*)[4][44]    >();
+	TestNullPtrAllCV<char(&)[4][44]    >();
+	TestNullPtrAllCV<char(&&)[4][44]   >();
+	TestNullPtrAllCV<void ()           >();
+	TestNullPtrAllCV<void (...)        >();
+	TestNullPtrAllCV<void () noexcept  >();
+	TestNullPtrAllCV<void (*)()        >();
+	TestNullPtrAllCV<void (&)()        >();
+	TestNullPtrAllCV<void (&&)()       >();
+//	TestNullPtrAllCV<void () &         >();		// [CompilationError]: cast to function type is illegal
+	TestNullPtrAllCV<E                 >();
+	TestNullPtrAllCV<EC                >();
+	TestNullPtrAllCV<C                 >();
+	TestNullPtrAllCV<CC                >();
+	TestNullPtrAllCV<U                 >();
+	TestNullPtrAllCV<UU                >();
+}
+
+
 // === DontDeduce ======================================================================================================
 
 namespace {

@@ -20,6 +20,12 @@ template <class... Ts>
 concept PrintType = PrintTypeT<Ts...>::value;
 
 
+// === NullPtr =========================================================================================================
+
+template <class Type>
+constexpr auto NullPtr = static_cast<std::add_pointer_t<Type>>(nullptr);
+
+
 // === DontDeduce ======================================================================================================
 
 template <class T>

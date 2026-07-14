@@ -412,7 +412,7 @@ The implementation is [freestanding](https://timsong-cpp.github.io/cppwp/n4950/i
 
 To compile it, C++23 features must be enabled.
 
-Tested on Visual Studio 2022 v17.14.20 with `/std:c++latest`.
+Tested on Visual Studio 2026 v18.7.3 with `/std:c++latest`.
 
 
 ## Standard function wrappers and views<a id="std-wrappers"/>

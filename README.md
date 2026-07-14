@@ -3,6 +3,7 @@
 A **B**asic **F**acilities library. It contains the following:
 - [`FunctionRef.hpp`](BFDocumentation/FunctionRef.md): A type-erased function view.
 - [`Hash.hpp` and `HashRange.hpp`](BFDocumentation/Hash.md): Easier hashing for Standard Library unordered containers.
+- [`Ref.hpp`](BFDocumentation/Ref.md): A smart reference that adds const-correctness to reference classes.
 - Other undocumented minor features.
 
 

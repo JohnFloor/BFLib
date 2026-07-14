@@ -93,7 +93,6 @@ public:
 	constexpr Hash(const auto&... values) :
 		mValue(ImpHash::HashCombinator::Combine(values...))
 	{
-		static_assert(sizeof...(values) >= 1, "BF::Hash: Provide at least one value to hash.");
 	}
 
 private:

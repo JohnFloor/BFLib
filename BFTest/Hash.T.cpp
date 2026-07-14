@@ -71,7 +71,8 @@ constexpr std::size_t BF_DUMMY = std::hash<ConstexprHashable>()({});			// try ou
 // === BF::Hash ctor. ==================================================================================================
 
 struct EmptyHash {
-//	BF::Hash BF_GetHash() const { return {}; }					// [CompilationError]: BF::Hash: Provide at least one value to hash.
+	bool operator==(const EmptyHash&) const = default;
+	BF::Hash BF_GetHash() const { return {}; }
 };
 
 
@@ -128,6 +129,7 @@ struct Wrapped3 {
 };
 
 
+BF_COMPILE_TIME_TEST() { AssertIsHashable<EmptyHash>(); }
 BF_COMPILE_TIME_TEST() { AssertIsHashable<Meth1>(); }
 BF_COMPILE_TIME_TEST() { AssertIsHashable<Meth2>(); }
 BF_COMPILE_TIME_TEST() { AssertIsHashable<Fun1>(); }

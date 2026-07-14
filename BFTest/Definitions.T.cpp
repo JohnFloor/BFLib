@@ -106,6 +106,18 @@ static_assert(TestImplies(true,  true));
 
 // === BF_FWD ==========================================================================================================
 
+namespace FwdTest {
+	static int i0 = 0;
+
+	template <int, int> static int         i    = 0;
+	template <int, int> static int&        ir   = i0;
+	template <int, int> static int&&       irr  = 0;
+	template <int, int> static const int   ci   = 0;
+	template <int, int> static const int&  cir  = 0;
+	template <int, int> static const int&& cirr = 0;
+}	// namespace FwdTest
+
+
 BF_COMPILE_TIME_TEST()
 {
 	int i0 = 0;
@@ -124,9 +136,18 @@ BF_COMPILE_TIME_TEST()
 	BF::AssertIsLValue(BF_FWD(cir));
 	BF::AssertIsRValue(BF_FWD(cirr));
 
+	BF::AssertIsRValue(BF_FWD(FwdTest::i<0, 0>));
+	BF::AssertIsLValue(BF_FWD(FwdTest::ir<0, 0>));
+	BF::AssertIsRValue(BF_FWD(FwdTest::irr<0, 0>));
+	BF::AssertIsRValue(BF_FWD(FwdTest::ci<0, 0>));
+	BF::AssertIsLValue(BF_FWD(FwdTest::cir<0, 0>));
+	BF::AssertIsRValue(BF_FWD(FwdTest::cirr<0, 0>));
+
+//	BF_FWD(1, 2);										// [CompilationError]: 'std::forward': no matching overloaded function found
+
 	int& ii = i;
 	// If BF_FWD() is implemented with std::forward (and not static_cast), IntelliSense correctly marks the following
-	// line as "C26800 Use of a moved from object: 'i' (lifetime.1).". Therefore it is implemented with std::forward.
+	// line as "C26800 Use of a moved from object: 'i' (lifetime.1).".
 //	int ignore = BF_FWD(ii);
 }
 

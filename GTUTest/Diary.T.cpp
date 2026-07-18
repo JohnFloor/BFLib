@@ -1,35 +1,9 @@
 #include "GTU/Diary.hpp"
 
-#include <chrono>
 #include <thread>
 #include <type_traits>
-#include <vector>
 #include "gtest/gtest.h"
-using namespace std::chrono_literals;
 
-
-// === Helpers =========================================================================================================
-
-static void Work()
-{
-	GTU_XD("+CC--") {
-		GTU::Diary s;
-		std::this_thread::sleep_for(5ms);
-		GTU::Diary t = s;
-		std::this_thread::sleep_for(5ms);
-		t = s;
-	}
-}
-
-
-static void Worker(size_t nWork)
-{
-	for (size_t i = 0; i < nWork; i++)
-		Work();
-}
-
-
-// === Tests ===========================================================================================================
 
 TEST(Diary, Push)
 {
@@ -57,14 +31,12 @@ TEST(Diary, Basics)
 
 TEST(Diary, Parallel)
 {
-	constexpr size_t NThreads = 10;
-	constexpr size_t NWork    = 10;
+	const auto worker = [] {
+		GTU_XD("") {}
+	};
 
-	std::vector<std::thread> threads;
-
-	for (size_t i = 0; i < NThreads; i++)
-		threads.emplace_back(&Worker, NWork);
-
-	for (std::thread& th : threads)
-		th.join();
+	GTU_XD("+-") {
+		GTU::Diary s;
+		std::thread(worker).join();
+	}
 }

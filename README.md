@@ -24,7 +24,14 @@ It contains a Python script [`CheckCE.py`](BFDocumentation/CheckCE.md) that auto
 
 ### Directory `GTU`
 
-Google Test Utilities. The class `GTU::Diary` keeps track of what happened to it (construction, copy, move, destruction). This can be later queried in tests.
+**G**oogle **T**est **U**tilities library. It contains the following:
+- [`Diary.hpp`](GTUDocumentation/Diary.md): Contains facilities to log events such as object creation, copying, moving and destruction. The event log can then be tested against an expected result. This is useful when testing containers and value wrappers.
+- Other undocumented minor features.
+
+
+### Directory `GTUDocumentation`
+
+Documentation for some parts of the `GTU` library. They are all referenced in this file.
 
 
 ### Directory `GTUTest`

@@ -45,7 +45,7 @@ TEST(Diary, Parallel)
 	};
 
 	GTU_XD("+-") {
-		GTU::Diary s;
+		GTU::Diary d;
 		std::thread(worker).join();
 	}
 }

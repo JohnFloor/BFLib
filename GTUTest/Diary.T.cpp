@@ -29,6 +29,15 @@ TEST(Diary, Basics)
 }
 
 
+TEST(Diary, NestingIsNotSupported)
+{
+	GTU_XD("-") {			// not "+-" (the library doesn't define what you can expect here)
+		GTU::Diary d;
+		GTU_XD("") {}
+	}
+}
+
+
 TEST(Diary, Parallel)
 {
 	const auto worker = [] {

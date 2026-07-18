@@ -50,6 +50,8 @@ TEST(Diary, Basics)
 	{ GTU::Diary s;    GTU_XD("M-") { GTU::Diary t = std::move(s); } }
 	{ GTU::Diary s, t; GTU_XD("C")  { t = s; }                       }
 	{ GTU::Diary s, t; GTU_XD("M")  { t = std::move(s); }            }
+	{ GTU::Diary d;    GTU_XD("C")  { d = d; }                       }	// self-copy
+	{ GTU::Diary d;    GTU_XD("M")  { d = std::move(d); }            }	// self-move
 }
 
 

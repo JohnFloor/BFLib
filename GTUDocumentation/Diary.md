@@ -15,6 +15,7 @@ Example:
 #include "gtest/gtest.h"
 #include "GTU/Diary.hpp"
 
+
 TEST(Example, One)
 {
     GTU_XD("ab") {              // scope begin: clear the event log

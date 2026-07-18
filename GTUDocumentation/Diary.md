@@ -17,10 +17,10 @@ Example:
 
 TEST(Example, One)
 {
-    GTU_XD("ab") {              // we expect that the event log will contain "ab" at the end of the scope
+    GTU_XD("ab") {              // scope begin: clear the event log
         GTU::Push('a');         // push 'a' into the event log
         GTU::Push('b');         // push 'b' into the event log
-    }
+    }                           // scope end: we expect the event log to contain "ab"
 }
 ```
 

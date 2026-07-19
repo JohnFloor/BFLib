@@ -23,6 +23,9 @@ class Ref {
 private:
 	using PType = std::remove_cv_t<Type>;
 
+	template <class OtherType>
+	static constexpr bool IsSameIgnoringCV = std::is_same_v<std::remove_cv_t<OtherType>, PType>;
+
 	template <class T>
 	static void AcceptSingleRef(const volatile Ref<T>&);
 
@@ -33,7 +36,7 @@ private:
 
 	template <class SourceType>
 	static decltype(auto) Verify(auto&& source) {
-		static_assert(std::is_same_v<std::remove_cv_t<SourceType>, std::remove_cv_t<Type>>, "'SourceType' should be the same as 'Type', ignoring cv-qualifiers.");
+		static_assert(IsSameIgnoringCV<SourceType>,                               "'SourceType' should be the same as 'Type', ignoring cv-qualifiers.");
 		static_assert(std::is_const_v<SourceType>    <= std::is_const_v<Type>,    "Cannot construct/assign from 'BF::Ref<SourceType>'. Conversion would lose a const qualifier.");
 		static_assert(std::is_volatile_v<SourceType> <= std::is_volatile_v<Type>, "Cannot construct/assign from 'BF::Ref<SourceType>'. Conversion would lose a volatile qualifier.");
 
@@ -88,7 +91,7 @@ public:
 
 	template <class ToType, class Self>
 	decltype(auto) ConstCast(this Self&& self) {
-		if constexpr (std::is_same_v<std::remove_cv_t<ToType>, std::remove_cv_t<Type>>)
+		if constexpr (IsSameIgnoringCV<ToType>)
 			return reinterpret_cast<std29::copy_cvref_t<Self, Ref<ToType>>&&>(self);
 		else
 			static_assert(false, "'ToType' should be the same as 'Type', ignoring cv-qualifiers.");
@@ -127,7 +130,7 @@ public:
 	{ return { mRefValue }; }
 
 private:
-	std::remove_cv_t<Type>	mRefValue;
+	PType	mRefValue;
 };
 
 

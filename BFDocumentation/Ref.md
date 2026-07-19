@@ -1,6 +1,6 @@
 # `BF::Ref`
 
-`BF::Ref` is a smart reference that adds const-correctness to reference classes.
+`BF::Ref` is a smart reference that brings const-correctness to reference classes.
 
 
 ## Reference classes and the const-correctness problem

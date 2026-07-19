@@ -27,7 +27,7 @@ This class has reference semantics. Copying `Window` objects copies the referenc
 ```c++
 Window w1 = hwnd;
 Window w2 = w1;
-// now 'w1' and 'w2' refers to the same window
+// now 'w1' and 'w2' refer to the same window
 ```
 
 Using this `Window` class is convenient, except that const-correctness won't work. We do have both non-`const` and `const` methods, but a `const Window` can be converted to a `Window`, which loses the `const` qualifier:

@@ -1,5 +1,6 @@
 #include "BF/Ref.hpp"
 
+#include <concepts>
 #include "gtest/gtest.h"
 #include "BF/TestUtils.hpp"
 #include "GTU/Diary.hpp"
@@ -55,6 +56,181 @@ void TestConstCast()
 	EXPECT_EQ((void*) &BF::LVal(BF::Move(cr).ConstCast<ToType>()),  &cr);
 	EXPECT_EQ((void*) &BF::LVal(BF::Move(vr).ConstCast<ToType>()),  &vr);
 	EXPECT_EQ((void*) &BF::LVal(BF::Move(cvr).ConstCast<ToType>()), &cvr);
+}
+
+
+constexpr int UnorderedInt = -1;
+
+
+std::partial_ordering PartiallyOrder(int leftOp, int rightOp)
+{
+	if (leftOp == UnorderedInt || rightOp == UnorderedInt)
+		return std::partial_ordering::unordered;
+	else
+		return leftOp <=> rightOp;
+}
+
+
+enum class ComparisonType {
+	Eq  = 0b0000001,	// ==
+	Ne  = 0b0000010,	// !=
+	Lt  = 0b0000100,	// <
+	Gt  = 0b0001000,	// >
+	Le  = 0b0010000,	// <=
+	Ge  = 0b0100000,	// >=
+	W3  = 0b1000000,	// <=>
+
+	Equality   = Eq | Ne,
+	Relational = Lt | Gt | Le | Ge
+};
+
+
+constexpr ComparisonType operator|(ComparisonType leftOp, ComparisonType rightOp)
+{
+	using U = std::underlying_type_t<ComparisonType>;
+	return ComparisonType(static_cast<U>(leftOp) | static_cast<U>(rightOp));
+}
+
+
+constexpr bool Has(ComparisonType flags, ComparisonType value)
+{
+	using U = std::underlying_type_t<ComparisonType>;
+	return static_cast<U>(flags) & static_cast<U>(value);
+}
+
+
+template <ComparisonType CT, class Type>
+void CheckComparisonOp1(const Type& t1, const Type& t2)
+{
+	const BF::Ref<Type> rt1 = t1;
+	const BF::Ref<Type> rt2 = t2;
+
+	if constexpr (Has(CT, ComparisonType::Eq)) EXPECT_EQ(rt1 == rt2, t1 == t2);
+	if constexpr (Has(CT, ComparisonType::Ne)) EXPECT_EQ(rt1 != rt2, t1 != t2);
+	if constexpr (Has(CT, ComparisonType::Lt)) EXPECT_EQ(rt1 <  rt2, t1 <  t2);
+	if constexpr (Has(CT, ComparisonType::Gt)) EXPECT_EQ(rt1 >  rt2, t1 >  t2);
+	if constexpr (Has(CT, ComparisonType::Le)) EXPECT_EQ(rt1 <= rt2, t1 <= t2);
+	if constexpr (Has(CT, ComparisonType::Ge)) EXPECT_EQ(rt1 >= rt2, t1 >= t2);
+
+	if constexpr (Has(CT, ComparisonType::W3)) {
+		static_assert(std::is_same_v<decltype(rt1 <=> rt2), decltype(t1 <=> t2)>);
+		EXPECT_EQ(rt1 <=> rt2, t1 <=> t2);
+	}
+}
+
+
+template <ComparisonType CT, class Type>
+void CheckComparisonOp()
+{
+	const Type t1(1), t2(2), tU(UnorderedInt);
+
+	CheckComparisonOp1<CT>(t1, t1);
+
+	CheckComparisonOp1<CT>(t1, t2);
+	CheckComparisonOp1<CT>(t2, t1);
+
+	CheckComparisonOp1<CT>(t1, tU);
+	CheckComparisonOp1<CT>(tU, t1);
+}
+
+
+namespace CompOpCheckers {
+
+struct Eq {
+	template <class T>
+	static constexpr bool           Check = requires (const T x) { { x == x } -> std::convertible_to<bool>; };
+	static constexpr ComparisonType CT    = ComparisonType::Equality;
+};
+
+struct Ne {
+	template <class T>
+	static constexpr bool           Check = requires (const T x) { { x != x } -> std::convertible_to<bool>; };
+	static constexpr ComparisonType CT    = ComparisonType::Ne;
+};
+
+struct Lt {
+	template <class T>
+	static constexpr bool           Check = requires (const T x) { { x <  x } -> std::convertible_to<bool>; };
+	static constexpr ComparisonType CT    = ComparisonType::Lt;
+};
+
+struct Gt {
+	template <class T>
+	static constexpr bool           Check = requires (const T x) { { x >  x } -> std::convertible_to<bool>; };
+	static constexpr ComparisonType CT    = ComparisonType::Gt;
+};
+
+struct Le {
+	template <class T>
+	static constexpr bool           Check = requires (const T x) { { x <= x } -> std::convertible_to<bool>; };
+	static constexpr ComparisonType CT    = ComparisonType::Le;
+};
+
+struct Ge {
+	template <class T>
+	static constexpr bool           Check = requires (const T x) { { x >= x } -> std::convertible_to<bool>; };
+	static constexpr ComparisonType CT    = ComparisonType::Ge;
+};
+
+template <class Ordering>
+struct WR {
+	template <class T>
+	static constexpr bool           Check = requires (const T x) { { x <=> x } -> std::convertible_to<Ordering>; };
+	static constexpr ComparisonType CT    = ComparisonType::W3 | ComparisonType::Relational;
+};
+
+template <class Ordering>
+struct W3 {
+	template <class T>
+	static constexpr bool           Check = std::three_way_comparable<T, Ordering>;
+	static constexpr ComparisonType CT    = ComparisonType::W3 | ComparisonType::Relational | ComparisonType::Equality;
+};
+
+}	// namespace CompOpCheckers
+
+
+template <std::constructible_from<int> Type, class CompOpChecker>
+void AssertIsComparableAtTheSameTime()
+{
+	constexpr bool T = CompOpChecker::template Check<Type>;
+	static_assert(T == CompOpChecker::template Check<BF::Ref<Type>>);
+	static_assert(T == CompOpChecker::template Check<BF::Ref<volatile Type>>);
+
+	if constexpr (T)
+		CheckComparisonOp<CompOpChecker::CT, Type>();
+}
+
+
+template <std::constructible_from<int> Type>
+void AssertIsComparableAtTheSameTime()
+{
+	AssertIsComparableAtTheSameTime<Type, CompOpCheckers::Eq>();
+	AssertIsComparableAtTheSameTime<Type, CompOpCheckers::Ne>();
+	AssertIsComparableAtTheSameTime<Type, CompOpCheckers::Lt>();
+	AssertIsComparableAtTheSameTime<Type, CompOpCheckers::Gt>();
+	AssertIsComparableAtTheSameTime<Type, CompOpCheckers::Le>();
+	AssertIsComparableAtTheSameTime<Type, CompOpCheckers::Ge>();
+	AssertIsComparableAtTheSameTime<Type, CompOpCheckers::WR<std::strong_ordering>>();
+	AssertIsComparableAtTheSameTime<Type, CompOpCheckers::WR<std::weak_ordering>>();
+	AssertIsComparableAtTheSameTime<Type, CompOpCheckers::WR<std::partial_ordering>>();
+	AssertIsComparableAtTheSameTime<Type, CompOpCheckers::W3<std::strong_ordering>>();
+	AssertIsComparableAtTheSameTime<Type, CompOpCheckers::W3<std::weak_ordering>>();
+	AssertIsComparableAtTheSameTime<Type, CompOpCheckers::W3<std::partial_ordering>>();
+}
+
+
+template <class Type>
+void AssertIsHashableAtTheSameTime()
+{
+	constexpr bool T = BF::StdHashable<Type>;
+	static_assert(T == BF::StdHashable<BF::Ref<Type>>);
+	static_assert(T == BF::StdHashable<BF::Ref<volatile Type>>);
+
+	if constexpr (T) {
+		const Type          t;
+		const BF::Ref<Type> rt;
+		EXPECT_EQ(std::hash<BF::Ref<Type>>()(rt), std::hash<Type>()(t));
+	}
 }
 
 
@@ -325,4 +501,60 @@ TEST(Ref, ConstCast)
 	TestConstCast<const          X, X>();
 	TestConstCast<volatile       X, X>();
 	TestConstCast<const volatile X, X>();
+}
+
+
+TEST(Ref, Comparison)
+{
+	struct X  { int m; };
+
+	struct Eq { bool operator==(const Eq& o) const { return m == o.m; } int m; };
+	struct Ne { bool operator!=(const Ne& o) const { return m != o.m; } int m; };
+	struct Lt { bool operator< (const Lt& o) const { return m <  o.m; } int m; };
+	struct Gt { bool operator> (const Gt& o) const { return m >  o.m; } int m; };
+	struct Le { bool operator<=(const Le& o) const { return m <= o.m; } int m; };
+	struct Ge { bool operator>=(const Ge& o) const { return m >= o.m; } int m; };
+
+	struct S  { std::strong_ordering  operator<=>(const S&) const = default;                            int m; };
+	struct W  { std::weak_ordering    operator<=>(const W&) const = default;                            int m; };
+	struct P  { std::partial_ordering operator<=>(const P&) const = default;                            int m; };
+
+	struct SU { std::strong_ordering  operator<=>(const SU& o) const { return m <=> o.m; }              int m; };
+	struct WU { std::weak_ordering    operator<=>(const WU& o) const { return m <=> o.m; }              int m; };
+	struct PU { std::partial_ordering operator<=>(const PU& o) const { return PartiallyOrder(m, o.m); } int m; };
+
+	AssertIsComparableAtTheSameTime<X>();
+
+	AssertIsComparableAtTheSameTime<Eq>();
+	AssertIsComparableAtTheSameTime<Ne>();
+	AssertIsComparableAtTheSameTime<Lt>();
+	AssertIsComparableAtTheSameTime<Gt>();
+	AssertIsComparableAtTheSameTime<Le>();
+	AssertIsComparableAtTheSameTime<Ge>();
+
+	AssertIsComparableAtTheSameTime<S>();
+	AssertIsComparableAtTheSameTime<W>();
+	AssertIsComparableAtTheSameTime<P>();
+
+	AssertIsComparableAtTheSameTime<SU>();
+	AssertIsComparableAtTheSameTime<WU>();
+	AssertIsComparableAtTheSameTime<PU>();
+}
+
+
+TEST(Ref, Hashing)
+{
+	struct X {};
+
+	struct Y {
+		BF::Hash BF_GetHash() const { return {}; }
+	};
+
+	struct Z {
+		BF::Hash BF_GetHash() const { return { 123 }; }
+	};
+
+	AssertIsHashableAtTheSameTime<X>();
+	AssertIsHashableAtTheSameTime<Y>();
+	AssertIsHashableAtTheSameTime<Z>();
 }

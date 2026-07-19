@@ -3,6 +3,8 @@
 
 
 #pragma once
+#include "BF/Compare.hpp"
+#include "BF/Hash.hpp"
 #include "BF/TypeTraits.hpp"
 
 
@@ -19,6 +21,8 @@ class Ref {
 	static_assert(std::is_class_v<Type>, "'Type' should be a (possibly cv-qualified) class.");
 
 private:
+	using PType = std::remove_cv_t<Type>;
+
 	template <class T>
 	static void AcceptSingleRef(const volatile Ref<T>&);
 
@@ -89,6 +93,38 @@ public:
 		else
 			static_assert(false, "'ToType' should be the same as 'Type', ignoring cv-qualifiers.");
 	}
+
+	bool operator==(const Ref& rightOp) const
+	requires requires (const PType x) { { x == x } -> std::convertible_to<bool>; }
+	{ return mRefValue == rightOp.mRefValue; }
+
+	bool operator!=(const Ref& rightOp) const
+	requires requires (const PType x) { { x != x } -> std::convertible_to<bool>; }
+	{ return mRefValue != rightOp.mRefValue; }
+
+	bool operator<(const Ref& rightOp) const
+	requires requires (const PType x) { { x <  x } -> std::convertible_to<bool>; }
+	{ return mRefValue < rightOp.mRefValue; }
+
+	bool operator>(const Ref& rightOp) const
+	requires requires (const PType x) { { x >  x } -> std::convertible_to<bool>; }
+	{ return mRefValue > rightOp.mRefValue; }
+
+	bool operator<=(const Ref& rightOp) const
+	requires requires (const PType x) { { x <= x } -> std::convertible_to<bool>; }
+	{ return mRefValue <= rightOp.mRefValue; }
+
+	bool operator>=(const Ref& rightOp) const
+	requires requires (const PType x) { { x >= x } -> std::convertible_to<bool>; }
+	{ return mRefValue >= rightOp.mRefValue; }
+
+	auto operator<=>(const Ref& rightOp) const
+	requires requires (const PType x) { { x <=> x } -> BF::StdOrdering; }
+	{ return mRefValue <=> rightOp.mRefValue; }
+
+	BF::Hash BF_GetHash() const
+	requires BF::StdHashable<PType>
+	{ return { mRefValue }; }
 
 private:
 	std::remove_cv_t<Type>	mRefValue;

@@ -85,6 +85,8 @@ public:
 		return *this;
 	}
 
+	void operator*() const = delete;		// we don't know the referred-to type
+
 	Type* operator->() const {
 		return const_cast<Type*>(&mRefValue);
 	}

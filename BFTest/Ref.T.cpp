@@ -457,6 +457,15 @@ TEST(Ref, NotSelf)
 }
 
 
+TEST(Ref, Dereferencing)
+{
+	class X {};
+
+	const BF::Ref<X> r;
+//	*r;													// [CompilationError]: attempting to reference a deleted function
+}
+
+
 TEST(Ref, Indirection)
 {
 	struct Window {

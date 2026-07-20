@@ -84,4 +84,4 @@ WindowRef w2 = w1;
 
 * An alternative would be to require the client to write two classes (`Window` and `ConstWindow`), but keeping all methods in a single class and solving the const-correctness problem centrally in the library seemed to be a cleaner solution.
 * The class is designed not to impose any performance penalty compared to using the underlying handle in C style.
-* Since `BF::Ref` does not know the class that represents the referred value (even if it exists), it has no `operator*`. Note that the template parameter of `BF::Ref` is the reference class, not the referred-to class.
+* `BF::Ref::operator*()` is explicitly deleted, because it doesn't know the class that represents the referred value (even if it exists). Note that the template parameter of `BF::Ref` is the reference class, not the referred-to class.
